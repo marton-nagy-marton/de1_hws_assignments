@@ -124,6 +124,8 @@ Replaced non-breakable spaces in the `the_numbers table`’s source file, as it 
 ### Database structure
 The initial database (that is, the OLTP layer) has 9 tables with structure presented in Figure 1. Note, that the database is clearly not in a normal form (e.g. both the `title_crew` and the `title_episodes` tables contain fields of arrays of `nconsts` and `tconsts`, which would be better in the form of a junction table).
 
-*Figure 1: The initial structure of the `movies` database*
+***Figure 1: The initial structure of the `movies` database***
 
-![The initial structure of the movies database, EER graph]()
+![The initial structure of the movies database, EER graph](/term_project1/assets/OLTP_structure.png)
+
+*Notes: Note that in the OLTP layer, only the tables from the IMDb and TMDB datasets can be connected to each other, as the `the_numbers` table does not have a `tconst` ID field which may be used as a foreign key. We might be tempted to connect this table to the IMDb datasets’ tables by the movie titles – however, this is not a straightforward connection as movies may have various variations of their titles. This is an issue we shall resolve in the ETL pipeline to the data warehouse layer.*
