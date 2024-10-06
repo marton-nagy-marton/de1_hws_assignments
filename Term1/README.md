@@ -126,6 +126,6 @@ The initial database (that is, the OLTP layer) has 9 tables with structure prese
 
 ***Figure 1: The initial structure of the `movies` database***
 
-![The initial structure of the movies database, EER graph](/term_project1/assets/OLTP_structure.png)
+![The initial structure of the movies database, EER graph](/Term1/assets/OLTP_structure.png)
 
 *Notes: Note that in the OLTP layer, only the tables from the IMDb and TMDB datasets can be connected to each other, as the `the_numbers` table does not have a `tconst` ID field which may be used as a foreign key. We might be tempted to connect this table to the IMDb datasets’ tables by the movie titles – however, this is not a straightforward connection as movies may have various variations of their titles. This is an issue we shall resolve in the ETL pipeline to the data warehouse layer.*
