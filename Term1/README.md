@@ -7,6 +7,29 @@ Author: Márton Nagy
 
 ## Introduction
 
+### Submitted project artifacts and their description
+
+`schema-creation-script.sql`
+
+An automatically generated SQL script by MySQL that creates the `movies` schema used in this project with all its necessary tables, fields and references.
+
+`import-data-script.sql`
+
+A handwritten SQL script that loads CSV and TSV files into the `movies` schema. For more detailed information, refer to the comments in the script.
+
+> [!WARNING]
+> This script can only be run from my own computer, as the executor needs to have the source datafiles in the MySQL Uploads directory on the local computer. Additionally, if you have the files, you can run the script only if you replace the path references to your correct local ones in the LOAD DATA statements.
+
+> [!CAUTION]
+> Loading the data this way may be very slow and take several hours depending on your hardware setup.
+
+`source-data-download-link.txt`
+
+A simple text file containing a link to a CEU OneDrive folder with all raw data files as well as the SQL dump file. These files are not stored directly on GitHub due to their large size.
+
+> [!TIP]
+> For convinience, I highly recommend loading the database by simply executing the downloaded SQL dump file.
+
 ## Data
 ### Sources
 The database has 3 sources:
