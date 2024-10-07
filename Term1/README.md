@@ -9,146 +9,148 @@ Author: Márton Nagy
 
 ### Submitted project artifacts and their description
 
-`schema-creation-script.sql`
-
-An automatically generated SQL script by MySQL that creates the `movies` schema used in this project with all its necessary tables, fields and references.
-
-`import-data-script.sql`
-
-A handwritten SQL script that loads CSV and TSV files into the `movies` schema. For more detailed information, refer to the comments in the script.
-
-> [!WARNING]
-> This script can only be run from my own computer, as the executor needs to have the source datafiles in the MySQL Uploads directory on the local computer. Additionally, if you have the files, you can run the script only if you replace the path references to your correct local ones in the LOAD DATA statements.
-
-> [!CAUTION]
-> Loading the data this way may be very slow and take several hours depending on your hardware setup.
-
-`source-data-download-link.txt`
-
-A simple text file containing a link to a CEU OneDrive folder with all raw data files as well as the SQL dump file. These files are not stored directly on GitHub due to their large size.
-
-> [!TIP]
-> For convinience, I highly recommend loading the database by simply executing the downloaded SQL dump file.
-
 ## Data
 ### Sources
-The database has 3 sources:
-1. The IMDb Non-Commercial Datasets (7 tables)
-   * decription available at: https://developer.imdb.com/non-commercial-datasets/
-   * downloaded from: https://datasets.imdbws.com/
-   * downloaded on: 2024-10-04
-2. Full TMDB Movies Dataset 2024 (1 table)
-   * description and download link: https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies?resource=download
-   * downloaded on: 2024-10-04
-3. The-Numbers.com Movie Budgets dataset (1 table)
-   * description available at: https://www.the-numbers.com/movie/budgets/all
-   * scraped directly from the website by the Python code in the_numbers_scraper.ipnyb file
-   * scraped on: 2024-10-04
+
+The database has a single source: a Kaggle dataset repository by the name _Spotify Dataset 2023_. The dataset has been compiled on 2023-12-20 using the Spotify API. It contains data on 438 938 tracks and their respective artists and albums.
+The raw CSVs can be downloaded directly from Kaggle: https://www.kaggle.com/datasets/tonygordonjr/spotify-dataset-2023
+I have downloaded the files on 2024-10-07.
+
 ### Variable description
-#### Tables from the IMDb datasets
-Variable descriptions taken from the official dataset website: https://developer.imdb.com/non-commercial-datasets/.
 
-`title_basics`:
-* `tconst`: alphanumeric unique identifier of the title
-* `title_type`: the type/format of the title (e.g. movie, short, tvseries, tvepisode, video, etc.)
-* `primary_title`: the more popular title / the title used by the filmmakers on promotional materials at the point of release
-* `original_title`: original title, in the original language
-* `is_adult`: 0: non-adult title; 1: adult title
-* `start_year`: represents the release year of a title. In the case of TV Series, it is the series start year
-* `end_year`: TV Series end year, null for all other title types
-* `runtime_minutes`: primary runtime of the title, in minutes
-* `genres`: includes up to three genres associated with the title
+`albums`:
 
-`title_akas`:
-* `tconst` – an alphanumeric unique identifier of the title
-* `ordering` – a number to uniquely identify rows for a given tconst
-* `title` – the localized title
-* `region` – the region for this version of the title
-* `language` – the language of the title
-* `types` – enumerated set of attributes for this alternative title. One or more of the following: "alternative", "dvd", "festival", "tv", "video", "working", "original", "imdbDisplay"
-* `attributes` – additional terms to describe this alternative title, not enumerated
-* `is_original_title` – 0: not original title; 1: original title
+- `track_name`: Name of the track.
 
-`title_crew`:
-* `tconst` – alphanumeric unique identifier of the title
-* `directors` – director(s) (nconsts) of the given title
-* `writers` – writer(s) (nconsts) of the given title
+- `track_id`: The Spotify ID for the track.
 
-`title_principals`:
-* `tconst` – alphanumeric unique identifier of the title
-* `ordering` – a number to uniquely identify rows for a given tconst
-* `nconst` – alphanumeric unique identifier of the name/person
-* `category` – the category of job that person was in
-* `job` – the specific job title if applicable, else null
-* `characters` – the name of the character played if applicable, else null
+- `track_number`: The number of the track. If an album has several discs, the track number refers to the number on the specified disc.
 
-`title_episodes`:
-* `tconst` – alphanumeric identifier of episode
-* `parent_tconst` – alphanumeric identifier of the parent TV Series
-* `season_number` – season number the episode belongs to
-* `episode_number` – episode number of the tconst in the TV series
+- `duration_ms`: The track length in milliseconds.
 
-`title_ratings`:
-* `tconst` – alphanumeric unique identifier of the title
-* `average_rating` – weighted average of all the individual user ratings
-* `num_votes` – number of votes the title has received
+- `album_type`: The type of the album. Allowed values include: `album`, `single`, `compilation`.
 
-`name_basics`:
-* `nconst` – alphanumeric unique identifier of the name/person
-* `primary_name` – name by which the person is most often credited
-* `birth_year` – in YYYY format
-* `death_year` – in YYYY format if applicable, else null
-* `primary_profession` – the top-3 professions of the person
-* `known_for_titles` – titles (tconsts) the person is known for
+- `artists`: The artists who performed the track.
 
-#### Table from the TMDB dataset
-Variable descriptions taken from the official dataset website: https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies/data.
+- `total_tracks`: The number of tracks in the album.
 
-`tmdb`:
-* `id` – unique identifier for each movie
-* `title` – title of the movie
-* `vote_average` – average vote or rating given by viewers
-* `vote_count` – total count of votes received for the movie
-* `status` – the status of the movie (e.g., Released, Rumored, Post Production, etc.)
-* `release_date` – date when the movie was released
-* `revenue` – total revenue generated by the movie in USD
-* `runtime` – duration of the movie in minutes
-* `adult` – indicates if the movie is suitable only for adult audiences
-* `backdrop_path` – URL of the backdrop image for the movie
-* `budget` – budget allocated for the movie in USD
-* `homepage` – official homepage URL of the movie
-* `imdb_id` – IMDb ID (tconst) of the movie
-* `original_language` – original language in which the movie was produced
-* `original_title` – original title of the movie
-* `overview` – brief description or summary of the movie
-* `popularity` – popularity score of the movie
-* `poster_path` – URL of the movie poster image
-* `tagline` – catchphrase or memorable line associated with the movie
-* `genres` – list of genres the movie belongs to
-* `production_companies` – list of production companies involved in the movie
-* `spoken_languages` – list of languages spoken in the movie
-* `keywords` – keywords associated with the movie
+- `album_name`: The name of the album. In case of an album takedown, the value may be an empty string.
 
-#### Table from the The-Numbers.com dataset
-Variable description compiled by the author.
+- `release_date`: The date the album was first released.
 
-`the_numbers`:
-* `id` – unique identifier of the movie
-* `release_date` – date when the movie was released (might be only a year, or year and month)
-* `movie` – the title of the movie in English
-* `budget` – production budget in USD
-* `dom_gross` – domestic gross revenue of the movie in USD
-* `worldw_gross` – worldwide gross revenue of the movie in USD
+- `label`: The label associated with the album.
 
-### Data cleaning
-Replaced non-breakable spaces in the `the_numbers table`’s source file, as it was causing issues with the `str_to_date()` function.
+- `album_popularity`: The popularity of the album, ranging between 0 and 100, with 100 being the most popular.
+
+- `album_id`: The Spotify ID for the album.
+
+- `artist_id`: The Spotify ID for the artist.
+
+- `artist_0`: Main artist.
+
+- `artist_1`: Featuring artist.
+
+- `artist_2`: Featuring artist.
+
+- `artist_3`: Featuring artist.
+
+- `artist_4`: Featuring artist.
+
+- `artist_5`: Featuring artist.
+
+- `artist_6`: Featuring artist.
+
+- `artist_7`: Featuring artist.
+
+- `artist_8`: Featuring artist.
+
+- `artist_9`: Featuring artist.
+
+- `artist_10`: Featuring artist.
+
+- `artist_11`: Featuring artist.
+
+- `duration_sec`: Track length in seconds.
+
+`artist`:
+
+- `id`: The Spotify ID of the artist.
+
+- `name`: Name of the artist.
+
+- `artist_popularity`: The popularity of the artist, ranging between 0 and 100, with 100 being the most popular. The artist's popularity is calculated based on the popularity of all the artist's tracks.
+
+- `artist_genres`: A list of the genres the artist is associated with. If the artist is not yet classified, this array will be empty.
+
+- `followers`: The total number of followers.
+
+- `genre_0`: Main genre.
+
+- `genre_1`: Sub-genre.
+
+- `genre_2`: Sub-genre.
+
+- `genre_3`: Sub-genre.
+
+- `genre_4`: Sub-genre.
+
+- `genre_5`: Sub-genre.
+
+- `genre_6`: Sub-genre.
+
+`tracks`:
+
+- `id`: The Spotify ID for the track.
+
+- `track_popularity`: The popularity of a track, ranging between 0 and 100, with 100 being the most popular. The popularity is calculated by an algorithm based on the total number of plays and how recent those plays are. Duplicate tracks (e.g., the same track from a single and an album) are rated independently. Artist and album popularity are derived from track popularity.
+
+- `explicit`: Whether the track contains explicit lyrics (`true` = yes, `false` = no or unknown).
+
+`features`:
+
+- `danceability`: Danceability describes how suitable a track is for dancing based on a combination of musical elements including tempo, rhythm stability, beat strength, and overall regularity. A value of 0.0 is least danceable and 1.0 is most danceable.
+
+- `energy`: Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy. For example, death metal has high energy, while a Bach prelude scores low on the scale. Perceptual features contributing to this attribute include dynamic range, perceived loudness, timbre, onset rate, and general entropy.
+
+- `key`: The key the track is in. Integers map to pitches using standard Pitch Class notation. E.g., 0 = C, 1 = C♯/D♭, 2 = D, and so on. If no key was detected, the value is -1.
+
+- `loudness`: The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track and are useful for comparing relative loudness of tracks. Values typically range between -60 and 0 dB.
+
+- `mode`: Mode indicates the modality (major or minor) of a track. Major is represented by 1 and minor by 0.
+
+- `speechiness`: Speechiness detects the presence of spoken words in a track. The more exclusively speech-like the recording (e.g., talk show, audiobook, poetry), the closer to 1.0 the attribute value. Values above 0.66 describe tracks made entirely of spoken words, values between 0.33 and 0.66 describe tracks that may contain both music and speech (e.g., rap music), and values below 0.33 likely represent music or non-speech-like tracks.
+
+- `acousticness`: A confidence measure from 0.0 to 1.0 of whether the track is acoustic. A value of 1.0 represents high confidence that the track is acoustic.
+
+- `instrumentalness`: Predicts whether a track contains no vocals. "Ooh" and "aah" sounds are treated as instrumental. Rap or spoken word tracks are clearly vocal. The closer the value is to 1.0, the greater the likelihood the track contains no vocal content. Values above 0.5 are intended to represent instrumental tracks, with higher confidence as the value approaches 1.0.
+
+- `liveness`: Detects the presence of an audience in the recording. Higher liveness values represent an increased probability that the track was performed live. A value above 0.8 indicates a strong likelihood the track is live.
+
+- `valence`: A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track. High valence indicates positive tracks (e.g., happy, cheerful, euphoric), while low valence indicates negative tracks (e.g., sad, depressed, angry).
+
+- `tempo`: The overall estimated tempo of a track in beats per minute (BPM). In musical terms, tempo is the speed or pace of a given piece and derives directly from the average beat duration.
+
+- `type`: The object type.
+
+- `id`: The Spotify ID for the track.
+
+- `uri`: The Spotify URI for the track.
+
+- `track_href`: A link to the Web API endpoint providing full details of the track.
+
+- `analysis_url`: A URL to access the full audio analysis of this track (an access token is required to retrieve data).
+
+- `duration_ms`: The duration of the track in milliseconds.
+
+- `time_signature`: An estimated time signature. The time signature ranges from 3 to 7, corresponding to time signatures from 3/4 to 7/4.
+
 
 ## OLTP layer
 ### Database structure
-The initial database (that is, the OLTP layer) has 9 tables with structure presented in Figure 1. Note, that the database is clearly not in a normal form (e.g. both the `title_crew` and the `title_episodes` tables contain fields of arrays of `nconsts` and `tconsts`, which would be better in the form of a junction table).
+The initial database (that is, the OLTP layer) has 4 tables with structure presented in Figure 1. Note, that the database is clearly not in a normal form (as genres and featuring artist could be better treated in separate tables connecting to the respective table, also there is no logical separation between the `albums` and the `tracks` table - that is, `albums` contain many pieces of information that would be better suited to be in `tracks`).
 
-***Figure 1: The initial structure of the `movies` database***
+***Figure 1: The initial structure of the `spotify` database***
 
 ![The initial structure of the movies database, EER graph](/Term1/assets/OLTP_structure.png)
 
-*Notes: Note that in the OLTP layer, only the tables from the IMDb and TMDB datasets can be connected to each other, as the `the_numbers` table does not have a `tconst` ID field which may be used as a foreign key. We might be tempted to connect this table to the IMDb datasets’ tables by the movie titles – however, this is not a straightforward connection as movies may have various variations of their titles. This is an issue we shall resolve in the ETL pipeline to the data warehouse layer.*
+*Notes:*
