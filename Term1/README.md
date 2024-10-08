@@ -12,8 +12,14 @@ Spotify holds a vast array of quantitative data on all the tracks, albums and ar
 ### Analytical questions
 
 Having taken a look at the dataset, I would like to answer the following questions in this project:
-1. 
-2. 
+
+1. What are the determinant factors of an album's popularity in the pop genres?
+2. How does albums' popularity differ between between songs from 2010 to 2015 and 2016 to 2013?
+3. What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
+4. Are explicit songs more popular than non-explicit ones?
+5. Does an artist's follower count influence the popularity of their songs?
+6. Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
+7. What are the genres that are very popular but don't have many songs - that is, what kind genres should we produce if we want high popularity and low competition?
 
 
 ### Submitted project artifacts and their description
@@ -43,7 +49,7 @@ I have downloaded the files on 2024-10-07.
 Variable descriptions were taken directly from Kaggle.
 
 > [!Note]
-> The fields and tables listed here correspond to the original dataset structure, as downloaded from the source. I have performed some normalization on these tables, which will be described in detail in the [_Database structure_](#database-structure) chapter. There, I will give a brief description of all the new tables and fields and the rationale.
+> The fields and tables listed here correspond to the original dataset structure, as downloaded from the source. I have performed some normalization on these tables, which will be described in detail in the [_Database structure_](#database-structure) chapter. There, I will give a brief description of all the new tables and fields and their rationale.
 
 `albums`:
 
