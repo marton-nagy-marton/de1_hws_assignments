@@ -30,7 +30,7 @@ Having taken a look at the dataset, I would like to answer the following questio
 * `spotify_albums_data_2023.csv`,
 * `spotify_tracks_data_2023.csv`.
 
-[`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip): Contains a the `normalized_data_dump.sql` dump file. When executed, it creates the structure of the normalized database (see in [Figure 2](#figure-2) and populates it with data. It is recommended to run this script rather than to import all data from the raw files.
+[`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip): Contains a the `normalized_data_dump.sql` dump file. When executed, it creates the structure of the normalized database (see in [Figure 2](#figure-2)) and populates it with data. It is recommended to run this script rather than to import all data from the raw files.
 
 [`MartonNagy_term1_from_scratch.sql`](/Term1/MartonNagy_term1_from_scratch.sql): This SQL-script initializes the database structure, populates the original tables with data imported from local CSV files, and then performs some normalization tasks to alter the database structure.
 > [!Important]
@@ -40,8 +40,10 @@ Having taken a look at the dataset, I would like to answer the following questio
 ## Data
 ### Sources
 
-The database has a single source: a Kaggle dataset repository by the name _Spotify Dataset 2023_. The dataset has been compiled on 2023-12-20 using the Spotify API. It contains data on 438,938 tracks and their respective artists and albums.
+The database has a single source: a Kaggle dataset repository by the name _Spotify Dataset 2023_. The dataset has been compiled on 2023-12-20 using the Spotify API. It contains data on 438,938 tracks and their respective artists and albums. Note, that this dataset contains only a fraction of the tracks, artists and albums currently on Spotify, and the selection criteria of each observation is unknown. This means that while the dataset may be a good tool to practice SQL, the conclusions drawn from the dataset are bound to be biased because of the unknown (and possibly arbitrary) selection criteria.
+
 The raw CSVs can be downloaded directly from Kaggle: https://www.kaggle.com/datasets/tonygordonjr/spotify-dataset-2023
+
 I have downloaded the files on 2024-10-07.
 
 ### Variable description
@@ -207,3 +209,14 @@ So, I performed some normalization tasks on the original tables, and the resulti
 ## Data warehouses
 
 ## Data marts
+
+# A note on what happened to IMDb...
+
+You might remember that I wanted to do Term Project 1 using IMDb data. I have collected all in all 9 tables from IMDb itself, from Kaggle and from scraping The-Numbers.com. Now, it turned out that these tables are rather large in size, so importing them into a database was really time consuming (and also stressful when a `load data` statement throw an error after an hour of running...). Even though I managed to import the tables to a database at the end, I have decided to drop that project, as working with such large files meant I was spending most of my time waiting for a response rather than practicing SQL. Thus, I have chosen the above described Spotify dataset to process in my term project instead.
+
+Nevertheless, I have uploaded 2 files related to my IMDb endeavours:
+* [`imdb.sql`](/Term1/imdb_legacy_files/imdb.sql): the script I have used to set up my tables for the IMDb project and to populate them with data from downloaded raw files,
+* [`the_numbers_scraper.py`](/Term1/imdb_legacy_files/the_numbers_scraper.py): a Python script I have used to scrape the The-Numbers.com site for budget and box office data.
+
+> [!Important]
+> These files are uploaded solely FYI, that is they do not constitute a part of my Term Project 1 submission!
