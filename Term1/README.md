@@ -7,25 +7,43 @@ Author: Márton Nagy
 
 ## Introduction
 
-Spotify holds a vast array of quantitative data on all the tracks, albums and artists uploaded there (e.g. valence of every song, that is their overall positiveness score). These variables can help as draw useful insights on the determinants of e.g. the popularity of a song or an album, the number of followers of an artist, or we can even determine trending genres. 
+Spotify holds a vast array of quantitative data on all the tracks, albums and artists uploaded there (e.g. valence of every song, that is their overall positiveness score). These variables can help as draw useful insights on the determinants of e.g. the popularity of a song or an album, the number of followers of an artist, or we can even determine trending genres.
+
+### Analytical questions
+
+Having taken a look at the dataset, I would like to answer the following questions in this project:
+1. 
+2. 
+
 
 ### Submitted project artifacts and their description
 
+[`spotify_raw_data.zip`](/Term1/spotify_raw_data.zip): The original source CSV files as downloaded from Kaggle. The compressed folder contains the following files: 
+* `spotify_artist_data_2023.csv`,
+* `spotify_features_data_2023.csv`,
+* `spotify_albums_data_2023.csv`,
+* `spotify_tracks_data_2023.csv`.
+
+[`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip): Contains a the `normalized_data_dump.sql` dump file. When executed, it creates the structure of the normalized database (see in [Figure 2](#figure-2) and populates it with data. It is recommended to run this script rather than to import all data from the raw files.
+
 [`MartonNagy_term1_from_scratch.sql`](/Term1/MartonNagy_term1_from_scratch.sql): This SQL-script initializes the database structure, populates the original tables with data imported from local CSV files, and then performs some normalization tasks to alter the database structure.
+> [!Important]
+> If you decide to run this script, please make sure to change the path to the imported files according to your local setup! However, I recommend simply loading the database through the provided SQL dump file for performance purposes.
+
 
 ## Data
 ### Sources
 
-The database has a single source: a Kaggle dataset repository by the name _Spotify Dataset 2023_. The dataset has been compiled on 2023-12-20 using the Spotify API. It contains data on 438 938 tracks and their respective artists and albums.
+The database has a single source: a Kaggle dataset repository by the name _Spotify Dataset 2023_. The dataset has been compiled on 2023-12-20 using the Spotify API. It contains data on 438,938 tracks and their respective artists and albums.
 The raw CSVs can be downloaded directly from Kaggle: https://www.kaggle.com/datasets/tonygordonjr/spotify-dataset-2023
 I have downloaded the files on 2024-10-07.
 
 ### Variable description
 
-Variable descriptions taken directly from Kaggle.
+Variable descriptions were taken directly from Kaggle.
 
 > [!Note]
-> The fields and tables listed here correspond to the original dataset structure, as downloaded from the source. I have performed some normalization on these tables, which will be described in detail in the [_Database structure_](/Term1/README.md#database-structure) chapter. There, I will give a brief description of all the new tables and fields and the rationale.
+> The fields and tables listed here correspond to the original dataset structure, as downloaded from the source. I have performed some normalization on these tables, which will be described in detail in the [_Database structure_](#database-structure) chapter. There, I will give a brief description of all the new tables and fields and the rationale.
 
 `albums`:
 
@@ -158,6 +176,7 @@ Variable descriptions taken directly from Kaggle.
 ### Database structure
 The initial database (that is, the OLTP layer) has 4 tables with structure presented in Figure 1.
 
+<a name="figure-1"></a>
 ***Figure 1: The initial structure of the `spotify` database***
 
 ![The initial structure of the spotify database, EER graph](/Term1/assets/OLTP_structure.png)
@@ -171,5 +190,14 @@ Note, that the database is clearly not in a normal form because:
 
 So, I performed some normalization tasks on the original tables, and the resulting structure is presented in Figure 2. I will perform all future tasks of Term Project 1 on this normalized database rather than on the original.
 
+<a name="figure-2"></a>
 ***Figure 2: The normalized structure of the `spotify` database***
+
 ![The normalized structure of the spotify database, EER graph](/Term1/assets/OLTP_structure_normalized.png)
+
+> [!Note]
+> During the process of normalization, I have encountered a small number of duplicate entries in the database (this was possible, as I was performing the load data statements with `unique_checks` set to 0 for performance reasons). Only one instance of a duplicate has been kept. Thus, the normalized database has 438,102 tracks, 78,172 albums, 37,012 artists and 3,959 genres in it.
+
+## Data warehouses
+
+## Data marts
