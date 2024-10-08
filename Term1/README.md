@@ -7,7 +7,11 @@ Author: Márton Nagy
 
 ## Introduction
 
+Spotify holds a vast array of quantitative data on all the tracks, albums and artists uploaded there (e.g. valence of every song, that is their overall positiveness score). These variables can help as draw useful insights on the determinants of e.g. the popularity of a song or an album, the number of followers of an artist, or we can even determine trending genres. 
+
 ### Submitted project artifacts and their description
+
+[`MartonNagy_term1_from_scratch.sql`](/Term1/MartonNagy_term1_from_scratch.sql): This SQL-script initializes the database structure, populates the original tables with data imported from local CSV files, and then performs some normalization tasks to alter the database structure.
 
 ## Data
 ### Sources
@@ -17,6 +21,11 @@ The raw CSVs can be downloaded directly from Kaggle: https://www.kaggle.com/data
 I have downloaded the files on 2024-10-07.
 
 ### Variable description
+
+Variable descriptions taken directly from Kaggle.
+
+> [!Note]
+> The fields and tables listed here correspond to the original dataset structure, as downloaded from the source. I have performed some normalization on these tables, which will be described in detail in the [_Database structure_](/Term1/README.md#database-structure) chapter. There, I will give a brief description of all the new tables and fields and the rationale.
 
 `albums`:
 
@@ -147,10 +156,20 @@ I have downloaded the files on 2024-10-07.
 
 ## OLTP layer
 ### Database structure
-The initial database (that is, the OLTP layer) has 4 tables with structure presented in Figure 1. Note, that the database is clearly not in a normal form (as genres and featuring artist could be better treated in separate tables connecting to the respective table, also there is no logical separation between the `albums` and the `tracks` table - that is, `albums` contain many pieces of information that would be better suited to be in `tracks`).
+The initial database (that is, the OLTP layer) has 4 tables with structure presented in Figure 1.
 
 ***Figure 1: The initial structure of the `spotify` database***
 
-![The initial structure of the movies database, EER graph](/Term1/assets/OLTP_structure.png)
+![The initial structure of the spotify database, EER graph](/Term1/assets/OLTP_structure.png)
 
-*Notes:*
+Note, that the database is clearly not in a normal form because:
+
+* Genres could be better represented in a separate table connected to `artist` by a junction table (currently they are represented in 8 different fields of `artist`, which makes it hard to work with).
+* `albums` is currently very redundant: it holds information on every album as many times as there are tracks in the album. So, `albums` should be splitted into 2 separate tables: one describing only album-related info, and one junction table connecting albums to tracks.
+* Information on tracks is scattered around in 3 different tables: `tracks`, `features` and `albums`. These fields should be merged into one table containing all track-specific fields (for the next point, note that artists performing a track is also a track-specific information, though an album should have a main artist as well).
+* Performing artists of a track could be better represented by a junction table connecting `artist` and the `tracks` (now containing all track-specific fields) tables.
+
+So, I performed some normalization tasks on the original tables, and the resulting structure is presented in Figure 2. I will perform all future tasks of Term Project 1 on this normalized database rather than on the original.
+
+***Figure 2: The normalized structure of the `spotify` database***
+![The normalized structure of the spotify database, EER graph](/Term1/assets/OLTP_structure_normalized.png)
