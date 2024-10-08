@@ -16,11 +16,13 @@ Having taken a look at the dataset, I would like to answer the following questio
 1. What are the determinant factors of an album's popularity in the pop genres?
 2. How does albums' popularity differ between between songs from 2010 to 2015 and 2016 to 2013?
 3. What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
-4. Are explicit songs more popular than non-explicit ones?
+4. How did the average valence of songs evolve over time? Is there a pattern, or at least some bumps that we might attribute to major world events?
 5. Does an artist's follower count influence the popularity of their songs?
 6. Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
-7. What are the genres that are very popular but don't have many songs - that is, what kind genres should we produce if we want high popularity and low competition?
+7. What are the genres that are very popular but don't have many songs in 2023 - that is, what kind genres should we produce if we want high popularity and low competition?
+8. Are certain genres associated with more explicit language?
 
+Notice, that these questions can be grouped in 2s: #1-2 relates to albums, #3-4 to tracks, #5-6 to artists and #7-8 to genres. This is intententional, as I wanted analyze every type of fact from my database. I will get back to these facts and their possible dimensions in the [Data warehouses](#data-warehouses) chapter.
 
 ### Submitted project artifacts and their description
 
@@ -30,7 +32,7 @@ Having taken a look at the dataset, I would like to answer the following questio
 * `spotify_albums_data_2023.csv`,
 * `spotify_tracks_data_2023.csv`.
 
-[`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip): Contains a the `normalized_data_dump.sql` dump file. When executed, it creates the structure of the normalized database (see in [Figure 2](#figure-2)) and populates it with data. It is recommended to run this script rather than to import all data from the raw files.
+[`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip): Contains the `normalized_data_dump.sql` dump file. When executed, it creates the structure of the normalized database (see in [Figure 2](#figure-2)) and populates it with data. It is recommended to run this script rather than to import all data from the raw files.
 
 [`MartonNagy_term1_from_scratch.sql`](/Term1/MartonNagy_term1_from_scratch.sql): This SQL-script initializes the database structure, populates the original tables with data imported from local CSV files, and then performs some normalization tasks to alter the database structure.
 > [!Important]
@@ -51,7 +53,7 @@ I have downloaded the files on 2024-10-07.
 Variable descriptions were taken directly from Kaggle.
 
 > [!Note]
-> The fields and tables listed here correspond to the original dataset structure, as downloaded from the source. I have performed some normalization on these tables, which will be described in detail in the [_Database structure_](#database-structure) chapter. There, I will give a brief description of all the new tables and fields and their rationale.
+> The fields and tables listed here correspond to the original dataset structure, as downloaded from the source. I have performed some normalization on these tables, which will be described in detail in the [Database structure](#database-structure) chapter. There, I will give a brief description of all the new tables and fields and their rationale.
 
 `albums`:
 
