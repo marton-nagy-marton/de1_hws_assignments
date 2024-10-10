@@ -382,6 +382,8 @@ primary key(artist_id, track_id)
 
 -- populate junction table by joining tracks_revised's artist fields on artis.name
 -- we have to do this for all the 12 artist fields
+-- connecting on names is not ideal and will result in some errors
+-- but no id is provided, so this is the best we can do
 insert into artist_to_tracks
 select distinct artist.id, tracks_revised.id, 1 as is_main from
 artist inner join tracks_revised on artist.name = tracks_revised.artist_0
@@ -541,7 +543,23 @@ references artist(id)
 on delete no action
 on update no action;
 
--- tunr these variables back on
+-- As noted earlier, matching tracks to artists was imperfect as no artist ID has been provided for all artists in the
+-- original tracks table.
+-- To resolve this, I am deleting records from the junction table for main artists, and keeping only those
+-- main artists that are the main artist of the respective album as well.
+-- This way, only 1 main artist per track remains.
+-- The featuring artists data is still quite unreliable, but there is no workaround for that (other than manual entity resulution for all tracks and artists).
+-- So, for this project we shall accept that featuring artist data is quite unreliable.
+delete from artist_to_tracks
+where
+	is_main_artist = 1 and
+    artist_id != (
+		select distinct albums.artist_id from
+		tracks_to_albums inner join albums on tracks_to_albums.album_id = albums.album_id
+        where tracks_to_albums.track_id = artist_to_tracks.track_id limit 1) and
+	track_id like '%';
+
+-- turn these variables back on
 set foreign_key_checks = 1;
 set unique_checks = 1;
 
