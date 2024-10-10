@@ -1,9 +1,9 @@
 # Documentation for Term Project 1
-Course: Data Engineering 1
+**Course: Data Engineering 1**
 
-Program: Business Analytics MS
+**Program: Business Analytics MS**
 
-Author: Márton Nagy
+**Author: Márton Nagy**
 
 ## Introduction
 
@@ -19,7 +19,7 @@ Having taken a look at the dataset, I would like to answer the following questio
 4. How did the average valence of songs evolve over time? Is there a pattern, or at least some bumps that we might attribute to major world events?
 5. Does an artist's follower count influence the popularity of their songs?
 6. Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
-7. What are the genres that are very popular but don't have many songs in 2023 - that is, what kind genres should we produce if we want high popularity and low competition?
+7. What are the genres that are very popular but don't have many songs - that is, what kind of genres should we produce if we want high popularity and low competition?
 8. Are certain genres associated with more explicit language?
 
 Notice, that these questions can be grouped in 2s: #1-2 relates to albums, #3-4 to tracks, #5-6 to artists and #7-8 to genres. This is intententional, as I wanted analyze every type of fact from my database. I will get back to these facts and their possible dimensions in the [Data warehouses](#data-warehouses) chapter.
@@ -32,19 +32,26 @@ Notice, that these questions can be grouped in 2s: #1-2 relates to albums, #3-4 
 * `spotify_albums_data_2023.csv`,
 * `spotify_tracks_data_2023.csv`.
 
+> [!Note]
+> On Kaggle, there is one more CSV titled spotify_data_12_20_2023.csv. This is already a merged table of the above data, so this was not used in my project.
+
 [`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip): Contains the `normalized_data_dump.sql` dump file. When executed, it creates the structure of the normalized database (see in [Figure 2](#figure-2)) and populates it with data. It is recommended to run this script rather than to import all data from the raw files.
 
 [`MartonNagy_term1_from_scratch.sql`](/Term1/MartonNagy_term1_from_scratch.sql): This SQL-script initializes the database structure, populates the original tables with data imported from local CSV files, and then performs some normalization tasks to alter the database structure.
 > [!Important]
 > If you decide to run this script, please make sure to change the path to the imported files according to your local setup! However, I recommend simply loading the database through the provided SQL dump file for performance purposes.
 
+[`MartonNagy_term1_ETLs.sql`](/Term1/MartonNagy_term1_ETLs.sql): This is the main solution file that
+* creates ETLs to data warehouses based on the OLTP data,
+* maintains ETLs up-to-date,
+* and creates views (data mart) based on the data warehouses to provide to for answering the analytical questions.
 
 ## Data
 ### Sources
 
 The database has a single source: a Kaggle dataset repository by the name _Spotify Dataset 2023_. The dataset has been compiled on 2023-12-20 using the Spotify API. It contains data on 438,938 tracks and their respective artists and albums. Note, that this dataset contains only a fraction of the tracks, artists and albums currently on Spotify, and the selection criteria of each observation is unknown. This means that while the dataset may be a good tool to practice SQL, the conclusions drawn from the dataset are bound to be biased because of the unknown (and possibly arbitrary) selection criteria.
 
-The raw CSVs can be downloaded directly from Kaggle: https://www.kaggle.com/datasets/tonygordonjr/spotify-dataset-2023
+The raw CSVs were downloaded directly from Kaggle: https://www.kaggle.com/datasets/tonygordonjr/spotify-dataset-2023
 
 I have downloaded the files on 2024-10-07.
 
@@ -208,9 +215,38 @@ So, I performed some normalization tasks on the original tables, and the resulti
 > [!Note]
 > During the process of normalization, I have encountered a small number of duplicate entries in the database (this was possible, as I was performing the load data statements with `unique_checks` set to 0 for performance reasons). Only one instance of a duplicate has been kept. Thus, the normalized database has 438,102 tracks, 78,172 albums, 37,012 artists and 3,959 genres in it.
 
+> [!Important]
+> When normalizing the tables, there was one major issue I could not resolve. In the original `albums` table, artists were presented only by name rather than ID (only one artist ID has been given for the main artist of the album). Thus, I had to join artists to tracks by artists' name rather than a unique ID which lead to some incorrect connections. For main artists, this was later resolved by overwriting the main artist of each song to the main artist of the album. However, I have found no feasible solution (other than manually looking up every record) to correct featuring artists' relations, so they were left in the database in the incorrect way. So, if we were to derive some insights from the data, this is a major limitation one must pay close attention to!
+
 ## Data warehouses
 
+As I have noted in the introduction, we need four different data warehouses based on the facts we seek to examine: one on albums, one on tracks, one on artists and one on genres. Then, we can easily derive views related to each question based on the respective data warehouse. Below, I present briefly each data warehouse in a chapter, outlining the facts and their dimensions in each one. Note, that neither of the warehouses are exhaustive: many more fields may have been added for each dimension. I aimed for a golden mean between what was strictly necessary to answer my questions and the endless possibilites I could have had.
+
+### Data warehouse on albums
+
+### Data warehouse on tracks
+
+### Data warehouse on artists
+
+### Data warehouse on genres
+
 ## Data marts
+
+### What are the determinant factors of an album's popularity in the pop genres?
+
+### How does albums' popularity differ between between songs from 2010 to 2015 and 2016 to 2013?
+
+### What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
+
+### How did the average valence of songs evolve over time?
+
+### Does an artist's follower count influence the popularity of their songs?
+
+### Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
+
+### What are the genres that are very popular but don't have many songs in 2023 - that is, what kind genres should we produce if we want high popularity and low competition?
+
+### Are certain genres associated with more explicit language?
 
 # A note on what happened to IMDb...
 
