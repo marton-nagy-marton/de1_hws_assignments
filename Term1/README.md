@@ -5,6 +5,20 @@
 
 **Author: Márton Nagy**
 
+## Executive summary
+
+The `spotify` [database](#data), sourced from [Kaggle](https://www.kaggle.com/datasets/tonygordonjr/spotify-dataset-2023), holds data on a number of tracks, albums, artists and genres available on Spotify. I have performed some normalization tasks on the original database to end up with the following database structure:
+
+![The normalized structure of the spotify database, EER graph](/Term1/assets/OLTP_structure_normalized.png)
+
+If you import the provided [SQL dump](/Term1/normalized_data_dump.zip) file, you should end up with this structure, populated with data. Alternatively, you can create the database structure from scratch and populate it with data from the raw files, then perform the normalization tasks, all using the provided [SQL script](/Term1/MartonNagy_term1_from_scratch.sql).
+
+The aim of the project was to provide data that may be used to answer a set of [12 analytical questions](#analytical-questions). To do so, first, 4 [data warehouses](#data-warehouses) have been created by separate ETL pipelines. The warehouses relate to facts on albums, tracks, artists and genres. Then, from these warehouses tailor-made [data marts](#data-marts) have been created as views to provide data related to each question.
+
+To maintain the up-to-dateness of data warehouses, a few triggers and a scheduled event have been [implemented](#extra-features-triggers-events-and-materialized-views) in my solution. In addition, some views have also been implemented in a materialized form (with a scheduled daily update).
+
+All the above functionalites have been implemented in a single [SQL script](/Term1/MartonNagy_term1_ETLs.sql) (pre-supposing having loaded the database).
+
 ## Introduction
 
 Spotify holds a vast array of quantitative data on all the tracks, albums and artists uploaded there (e.g. valence of every song, that is their overall positiveness score). These variables can help as draw useful insights on the determinants of e.g. the popularity of a song or an album, the number of followers of an artist, or we can even determine trending genres.
@@ -15,14 +29,18 @@ Having taken a look at the dataset, I would like to answer the following questio
 
 1. What are the determinant factors of an album's popularity in the pop genres?
 2. How does albums' popularity differ between between songs from 2010 to 2015 and 2016 to 2013?
-3. What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
-4. How did the average valence of songs evolve over time? Is there a pattern, or at least some bumps that we might attribute to major world events?
-5. Does an artist's follower count influence the popularity of their songs?
-6. Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
-7. What are the genres that are very popular but don't have many songs - that is, what kind of genres should we produce if we want high popularity and low competition?
-8. Are certain genres associated with more explicit language?
+3. Is there a relationship between an album's duration and the characteristics of its songs?
+4. What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
+5. How did the average valence of songs evolve over time? Is there a pattern, or at least some bumps that we might attribute to major world events?
+6. Which songs were one-time hits - that is, which songs have a much higher popularity than the average popularity of songs on the album?
+7. Does an artist's follower count influence the popularity of their songs?
+8. Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
+9. Does the high popularity of songs where the artist only features increase their main songs' popularity as well?
+10. What are the genres that are very popular but don't have many songs - that is, what kind of genres should we produce if we want high popularity and low competition?
+11. Are certain genres associated with more explicit language?
+12. What is the relationship between genres' popularity aggregated on 3 different levels: songs, albums, and artists? Does the level of aggregation have an effect on popularity?
 
-Notice, that these questions can be grouped in 2s: #1-2 relates to albums, #3-4 to tracks, #5-6 to artists and #7-8 to genres. This is intententional, as I wanted analyze every type of fact from my database. I will get back to these facts and their possible dimensions in the [Data warehouses](#data-warehouses) chapter.
+Notice, that these questions can be grouped in 3s: #1-3 relates to albums, #4-6 to tracks, #7-9 to artists and #10-12 to genres. This is intententional, as I wanted analyze every type of fact from my database. I will get back to these facts and their possible dimensions in the [Data warehouses](#data-warehouses) chapter.
 
 ### Submitted project artifacts and their description
 
@@ -222,31 +240,545 @@ So, I performed some normalization tasks on the original tables, and the resulti
 
 As I have noted in the introduction, we need four different data warehouses based on the facts we seek to examine: one on albums, one on tracks, one on artists and one on genres. Then, we can easily derive views related to each question based on the respective data warehouse. Below, I present briefly each data warehouse in a chapter, outlining the facts and their dimensions in each one. Note, that neither of the warehouses are exhaustive: many more fields may have been added for each dimension. I aimed for a golden mean between what was strictly necessary to answer my questions and the endless possibilites I could have had.
 
-### Data warehouse on albums
+All data warehouses are implemented as stored procedures. They are called once explicitly to initialize the warehouses. Then, a scheduled event (see later) re-builds all warehouses once a day to keep them up-to-date. The stored procedures also log some messages into the `messages` table (the message differs whether the stored procedure is called to initalize the warehouse with a 0 input parameter, or when it is called by an event, with a 1 input parameter).
 
-### Data warehouse on tracks
+### Data warehouse on albums (`albums_dw`)
 
-### Data warehouse on artists
+This table stores aggregated album data, including album facts, artist dimensions, genre dimensions, and track dimensions. Below is a detailed list of the fields and their content.
 
-### Data warehouse on genres
+#### Table Structure
+
+##### Primary Key
+
+> [!Note]
+> A primary key was needed so that deletion triggers work even if `safe updates` is turned on in MySQL settings.
+
+- `album_id`: Unique identifier for the album.
+
+##### Album Facts
+- `album_name`: Name of the album.
+- `total_tracks`: Total number of tracks in the album.
+- `album_popularity`: Popularity score of the album.
+- `release_date`: Date when the album was released.
+- `album_type`: Type of album (e.g., album, single, compilation).
+- `label`: Name of the record label that released the album.
+- `total_duration_s`: Total duration of the album in seconds.
+
+##### Artist Dimension
+- `artist_id`: Unique identifier for the main artist.
+- `artist_name`: Name of the main artist.
+- `artist_popularity`: Popularity score of the main artist.
+- `followers`: Number of followers of the main artist.
+- `avg_feat_artist_popularity`: Average popularity score of featuring artists on the album.
+- `avg_feat_artist_followers`: Average number of followers of featuring artists on the album.
+- `count_feat_artist`: Count of featuring artists on the album.
+
+##### Genre Dimension
+- `artist_main_genre`: Main genre of the album's primary artist.
+
+##### Track Dimension (Aggregated Track-Level Data)
+- `explicit_tracks_pct`: Percentage of explicit tracks in the album.
+- `avg_danceability`: Average danceability score of tracks in the album.
+- `avg_energy`: Average energy score of tracks in the album.
+- `avg_loudness`: Average loudness level of tracks in the album.
+- `avg_speechiness`: Average speechiness score of tracks in the album.
+- `avg_acousticness`: Average acousticness score of tracks in the album.
+- `avg_instrumentalness`: Average instrumentalness score of tracks in the album.
+- `avg_liveness`: Average liveness score of tracks in the album.
+- `avg_valence`: Average valence score (musical positivity) of tracks in the album.
+
+##### Subqueries
+- Subqueries are used to calculate aggregate values, such as:
+  - Featured artist popularity and follower statistics.
+  - Total album duration (in seconds).
+  - Track-level averages for metrics like energy, danceability, and explicitness.
+
+### Data warehouse on tracks (`tracks_dw`)
+
+This table stores aggregated track data, including track facts, album dimensions, artist dimensions, and genre dimensions. Below is a detailed list of the fields and their content.
+
+#### Table Structure
+
+##### Primary Key
+
+> [!Note]
+> A primary key was needed so that deletion triggers work even if `safe updates` is turned on in MySQL settings.
+
+- `id`: Unique identifier for the track.
+
+##### Track Facts
+- `track_name`: Name of the track.
+- `track_popularity`: Popularity score of the track.
+- `is_explicit`: Indicates whether the track contains explicit content.
+- `danceability`: Danceability score of the track.
+- `energy`: Energy level of the track.
+- `key_signature`: Key signature of the track.
+- `loudness`: Loudness level of the track.
+- `mode`: Mode of the track (e.g., major or minor).
+- `speechiness`: Speechiness score of the track.
+- `acousticness`: Acousticness score of the track.
+- `instrumentalness`: Instrumentalness score of the track.
+- `liveness`: Liveness score of the track.
+- `valence`: Valence score (musical positivity) of the track.
+- `tempo`: Tempo of the track in beats per minute (BPM).
+- `duration_s`: Duration of the track in seconds (converted from milliseconds).
+- `time_signature`: Time signature of the track.
+
+##### Album Dimension
+- `album_name`: Name of the album containing the track.
+- `total_tracks`: Total number of tracks in the album.
+- `release_date`: Release date of the album.
+- `album_popularity`: Popularity score of the album.
+- `album_duration_s`: Total duration of the album in seconds.
+- `albumtracks_avg_popularity`: Average popularity of tracks in the album.
+
+##### Artist Dimension
+- `main_artist_name`: Name of the main artist.
+- `main_artist_popularity`: Average popularity score of the main artist.
+- `main_artist_followers`: Average number of followers of the main artist.
+- `feat_artist_avg_popularity`: Average popularity score of featured artists.
+- `feat_artist_avg_followers`: Average number of followers of featured artists.
+- `feat_artist_count`: Count of featured artists on the track.
+
+##### Genre Dimension
+- `main_artist_genre`: Main genre of the track’s primary artist.
+
+##### Subqueries
+- Subqueries are used to calculate aggregate values, such as:
+  - Total album duration (in seconds).
+  - Average track popularity within the album.
+  - Main and featuring artist popularity and follower statistics.
+  - Genre data linked to the main artist.
+
+### Data warehouse on artists (`artist_dw`)
+
+This table stores aggregated artist data, including artist facts, tracks dimensions, albums dimensions, and genres dimensions. Below is a detailed list of the fields and their content.
+
+#### Table Structure
+
+##### Primary Key
+
+> [!Note]
+> A primary key was needed so that deletion triggers work even if `safe updates` is turned on in MySQL settings.
+
+- `artist_id`: Unique identifier for the artist.
+
+##### Artist Facts
+- `artist_name`: Name of the artist.
+- `artist_popularity`: Popularity score of the artist.
+- `followers`: Number of followers of the artist.
+
+##### Tracks Dimension
+- `main_songs_popularity`: Average popularity score of tracks where the artist is the main artist.
+- `feat_songs_popularity`: Average popularity score of tracks where the artist is a featured artist.
+- `main_songs_count`: Count of tracks where the artist is the main artist.
+- `feat_songs_count`: Count of tracks where the artist is a featured artist.
+- `avg_popularity_no_feat`: Average popularity score of tracks without featuring artists.
+- `avg_popularity_with_feat`: Average popularity score of tracks with featuring artists.
+- `avg_popularity_with_high_follower_feat`: Average popularity score of tracks where there is a highly followed featuring artist (defined as having at least twice the main artist's followers).
+
+##### Albums Dimension
+- `albums_count`: Total number of albums by the artist.
+- `avg_albums_popularity`: Average popularity score of the artist's albums.
+
+##### Genres Dimension
+- `sub_genres_count`: Count of the artist's subgenres.
+- `main_genre`: Main genre of the artist.
+
+##### Subqueries
+- Subqueries are used to calculate aggregate values, such as:
+  - The artist's track and feature statistics, including counts and average popularity.
+  - The artist's album counts and average album popularity.
+  - Genre details like subgenre counts and the main genre.
+  - Track popularity in relation to featured artists, including tracks with highly followed featuring artists.
+
+### Data warehouse on genres (`genres_dw`)
+
+This table stores aggregated genre data, including album, artist, and track statistics in relation to their association with genres as either the main or subgenre. Below is a detailed list of the fields and their content.
+
+#### Table Structure
+
+##### Primary Key
+
+> [!Note]
+> A primary key was needed so that deletion triggers work even if `safe updates` is turned on in MySQL settings.
+
+- `genre_id`: Unique identifier for the genre.
+
+##### Genre Facts
+- `genre`: Name of the genre.
+
+##### Album Dimension
+- `albums_in_genre_main`: Number of albums where the genre is the main genre of the album's artist.
+- `albums_in_genre_sub`: Number of albums where the genre is a subgenre of the album's artist.
+- `albums_in_genre_main_popularity_avg`: Average popularity score of albums where the genre is the main genre.
+- `albums_in_genre_sub_popularity_avg`: Average popularity score of albums where the genre is a subgenre.
+
+##### Artist Dimension
+- `artist_in_genre_main`: Number of artists that have the genre as their main genre.
+- `artist_in_genre_sub`: Number of artists that have the genre as a subgenre.
+- `artist_in_genre_main_popularity_avg`: Average popularity score of artists with the genre as their main genre.
+- `artist_in_genre_sub_popularity_avg`: Average popularity score of artists with the genre as a subgenre.
+- `artist_in_genre_main_foll_sum`: Total number of followers of artists with the genre as their main genre.
+- `artist_in_genre_sub_foll_sum`: Total number of followers of artists with the genre as a subgenre.
+
+##### Track Dimension
+- `tracks_in_genre_main`: Number of tracks where the genre is the main genre of the track's artist.
+- `tracks_in_genre_sub`: Number of tracks where the genre is a subgenre of the track's artist.
+- `tracks_in_genre_main_popularity_avg`: Average popularity score of tracks where the genre is the main genre.
+- `tracks_in_genre_sub_popularity_avg`: Average popularity score of tracks where the genre is a subgenre.
+- `tracks_in_genre_main_explicit_pct`: Percentage of explicit tracks where the genre is the main genre.
+- `tracks_in_genre_sub_explicit_pct`: Percentage of explicit tracks where the genre is a subgenre.
+
+##### Subqueries
+- Subqueries are used to calculate aggregate values, such as:
+  - Counts and average popularity of albums, artists, and tracks in main and subgenres.
+  - Total follower counts for artists in each genre.
+  - Explicit content percentages for tracks within each genre.
 
 ## Data marts
 
+I have created views providing selected data to answer my 12 analytical questions. For most of the questions, I provide fact-level data in each view so that further statistical analysis (e.g. a simple regression) may be performed. Note, however, that for the 2nd question, I went with a different approach: I aggrageted the data for the 2 periods and the view presents some of the key statistical properties of the groups. This helps answering the question without any more sophisticated approach, but cuts the possibility of further analysis.
+
 ### What are the determinant factors of an album's popularity in the pop genres?
 
-### How does albums' popularity differ between between songs from 2010 to 2015 and 2016 to 2013?
+This view, `pop_albums`, provides insights into what influences an album's popularity within the pop genre. By selecting albums where the artist's main genre is related to "pop," the view helps identify patterns and factors that might correlate with higher album popularity.
+
+#### Selected Fields
+
+- **Album Details**: 
+  - `album_id`, `album_name`, `album_type`, and `label` provide core album information.
+  - Date-related fields (`release_year`, `release_month`, `release_day`, `release_dayofweek`, and `release_time`) offer insights into the release timing of the album, which might influence its popularity.
+  - `total_tracks` and `total_duration_s` give an idea of the album's structure and length.
+
+- **Popularity Metrics**:
+  - `album_popularity` is the key dependent variable being analyzed.
+  - The view includes `artist_popularity` and `followers` for the main artist, as well as the average popularity and follower count of any featuring artists (`avg_feat_artist_popularity`, `avg_feat_artist_followers`, and `count_feat_artist`).
+
+- **Genre**: Only albums from artists whose main genre includes "pop" are included in the view (`artist_main_genre`).
+
+- **Track Characteristics**:
+  - Track-level data is aggregated to give averages for explicit tracks (`explicit_tracks_pct`), danceability, energy, loudness, and other musical attributes like speechiness, acousticness, instrumentalness, liveness, and valence. These features can be useful in understanding the sound profile that correlates with popular pop albums.
+
+#### Ordering
+The results are ordered by `album_popularity` in descending order, so the most popular albums appear first in the dataset.
+
+### How does albums' popularity differ between songs from 2010 to 2015 and 2016 to 2023?
+
+The `albums_popularity_date` view analyzes the differences in album popularity between two distinct time periods: 2010-2015 and 2016-2023. This view aggregates album popularity data to identify trends and patterns based on the release year of the albums.
+
+#### Selected Fields
+
+- **Release Year Category**:
+  - The view categorizes albums into two groups:
+    - `'2010-2015'`: For albums released between 2010 and 2015.
+    - `'2016-2023'`: For albums released between 2016 and 2023.
+  
+- **Popularity Metrics**:
+  - `avg_album_popularity`: The average popularity score of albums within each release year category.
+  - `std_album_popularity`: The standard deviation of album popularity, indicating the variability within each category.
+  - `min_album_popularity` and `max_album_popularity`: These fields provide insight into the range of album popularity within each time frame.
+  - `count_album_popularity`: The total count of albums considered in each release year category.
+
+#### Grouping and Filtering
+- The results are grouped by `release_year_category`, allowing for a comparison of album popularity between the two defined periods.
+- The `having` clause ensures that only non-null categories are included in the final output, eliminating any rows without valid release year categories.
+
+### Is there a relationship between an album's duration and the characteristics of its songs?
+
+The `duration_determinants` view explores the potential relationship between an album's duration and various musical characteristics of its tracks. By analyzing these attributes, this view aims to uncover insights regarding how song characteristics may correlate with the length of albums.
+
+#### Selected Fields
+
+- **Album Identification**:
+  - `album_id`: Unique identifier for the album.
+  - `album_name`: The name of the album.
+  
+- **Album Duration**:
+  - `total_duration_s`: Total duration of the album in seconds.
+
+- **Musical Characteristics**:
+  - `avg_danceability`: Average danceability score of tracks in the album.
+  - `avg_energy`: Average energy score of tracks in the album.
+  - `avg_loudness`: Average loudness level of tracks in the album.
+  - `avg_speechiness`: Average speechiness score of tracks in the album.
+  - `avg_acousticness`: Average acousticness score of tracks in the album.
+  - `avg_instrumentalness`: Average instrumentalness score of tracks in the album.
+  - `avg_liveness`: Average liveness score of tracks in the album.
+  - `avg_valence`: Average valence score (musical positivity) of tracks in the album.
+
+#### Filtering Criteria
+The view only includes albums where `total_duration_s` is not null, ensuring that all analyzed albums have defined durations for accurate analysis.
 
 ### What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
 
+The `taylor_swift_songs` view analyzes the characteristics of Taylor Swift's tracks to identify which factors contribute to maximizing their popularity. By examining various song attributes, this view aims to provide insights into the kind of songs she should produce to enhance their appeal.
+
+#### Selected Fields
+
+- **Track Information**:
+  - `track_name`: The name of the track.
+  - `track_popularity`: Popularity score of the track.
+  - `is_explicit`: Indicates if the track is explicit.
+  
+- **Musical Characteristics**:
+  - `danceability`: Danceability score of the track.
+  - `energy`: Energy score of the track.
+  - `key_signature`: Key signature of the track.
+  - `loudness`: Loudness level of the track.
+  - `mode`: Musical mode of the track.
+  - `speechiness`: Speechiness score of the track.
+  - `acousticness`: Acousticness score of the track.
+  - `instrumentalness`: Instrumentalness score of the track.
+  - `liveness`: Liveness score of the track.
+  - `valence`: Valence score (musical positivity) of the track.
+  - `tempo`: Tempo of the track.
+  - `duration_s`: Duration of the track in seconds.
+  - `time_signature`: Time signature of the track.
+
+- **Album Context**:
+  - `album_duration_s`: Total duration of the album containing the track.
+  
+- **Featured Artist Metrics**:
+  - `feat_artist_avg_popularity`: Average popularity of featuring artists on the track.
+  - `feat_artist_avg_followers`: Average number of followers of featuring artists on the track.
+  - `feat_artist_count`: Count of featuring artists on the track.
+
+- **Release Date Information**:
+  - `release_year`: Year the track was released.
+  - `release_month`: Month the track was released.
+  - `release_day`: Day the track was released.
+  - `release_dayofweek`: Day of the week the track was released.
+  - `release_time`: Time the track was released.
+
+#### Ordering
+The results are ordered by `track_popularity` in descending order, allowing for easy identification of the most popular tracks.
+
 ### How did the average valence of songs evolve over time?
+
+The `valence_ts` view investigates the evolution of the average valence score of songs released over time. Valence is a measure of musical positivity or emotional value, and this analysis aims to identify trends and potential correlations with significant world events.
+
+#### Selected Fields
+
+- **Release Date Information**:
+  - `release_year`: Year of the song's release.
+  - `release_month`: Month of the song's release.
+
+- **Song Metrics**:
+  - `count_songs`: Total number of songs released in that specific year and month.
+  - `avg(valence)`: Average valence score of the songs released during that time period.
+
+#### Grouping and Ordering
+- The results are grouped by `release_year` and `release_month`, allowing for a monthly overview of how average valence scores change over time.
+- The results are ordered by `release_year` and `release_month` to maintain a chronological sequence.
+
+#### Purpose
+This view enables an analysis of trends in the emotional content of music over time, potentially highlighting patterns or significant changes that may correspond with major world events.
+
+### Which songs were one-time hits - that is, which songs have a much higher popularity than the average popularity of songs on the album?
+
+The `one_time_hits` view identifies songs that have achieved exceptionally high popularity compared to the average popularity of tracks on their respective albums. This analysis focuses on isolating tracks that stand out significantly from their peers within the same album.
+
+#### Selected Fields
+
+- **Track Information**:
+  - `id`: Unique identifier for the track.
+  - `track_name`: Name of the track.
+  - `track_popularity`: Popularity score of the track.
+  - `albumtracks_avg_popularity`: Average popularity score of tracks on the same album.
+
+#### Filtering Criteria
+
+- **Popularity Threshold**: The view includes only those tracks whose popularity is at least **25 times higher** than the average popularity of their album's tracks.
+  
+- **Album Track Count**: Only albums with at least **10 tracks** are considered to ensure a substantial dataset for comparison.
+
+- **Exclusion of Zero Popularity**: Tracks and album averages with a popularity score of **zero** are excluded from the results to avoid misleading data.
+
+#### Ordering
+The results are ordered by `track_popularity` in descending order, highlighting the most popular one-time hits at the top of the list.
+
+#### Purpose
+This view allows for the identification of tracks that became standout hits, providing insights into songs that significantly exceeded the popularity expectations set by their albums.
 
 ### Does an artist's follower count influence the popularity of their songs?
 
+The `artist_followers_popularity` view examines the relationship between an artist's follower count and the popularity of their songs. This analysis seeks to determine whether there is a correlation between the number of followers an artist has and their overall popularity within the music industry.
+
+#### Selected Fields
+
+- **Artist Information**:
+  - `artist_id`: Unique identifier for the artist.
+  - `artist_name`: Name of the artist.
+  - `artist_popularity`: Popularity score of the artist.
+  - `followers`: Total number of followers the artist has.
+
+#### Ordering
+The results are ordered first by `artist_popularity` in descending order and then by `followers` in descending order. This arrangement highlights the most popular artists at the top of the list, allowing for easy comparison of popularity against follower counts.
+
+#### Purpose
+This view aims to provide insights into whether having a higher follower count translates into greater song popularity, allowing for further analysis of trends and correlations in the music industry.
+
 ### Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
 
-### What are the genres that are very popular but don't have many songs in 2023 - that is, what kind genres should we produce if we want high popularity and low competition?
+The `feat_effects` view investigates whether collaborating with a featuring artist who has a high follower count positively influences the popularity of an artist's song compared to songs without a featuring artist. This analysis provides insights into the potential benefits of collaborations in the music industry.
+
+#### Selected Fields
+
+- **Artist Information**:
+  - `artist_id`: Unique identifier for the artist.
+  - `artist_name`: Name of the artist.
+  
+- **Popularity Metrics**:
+  - `avg_popularity_no_feat`: Average popularity of songs where there are no featuring artists.
+  - `avg_popularity_with_feat`: Average popularity of songs that feature artists.
+  - `avg_popularity_with_high_follower_feat`: Average popularity of songs featuring artists with a high follower count.
+
+#### Ordering
+The results are ordered by `avg_popularity_no_feat` in descending order, followed by `avg_popularity_with_feat`, and then `avg_popularity_with_high_follower_feat`. This order helps to highlight the differences in song popularity based on the presence and follower count of featuring artists.
+
+#### Purpose
+This view aims to clarify the relationship between collaboration with high-follower count artists and the overall popularity of an artist's songs, allowing for informed decisions about collaborations in future music projects.
+
+### Does the high popularity of songs where the artist only features increase their main songs' popularity as well?
+
+The `feature_spillovers` view examines the potential relationship between the popularity of songs in which an artist is featured and the popularity of their main songs. This analysis aims to determine if there is a "spillover" effect, where high-performing collaborative tracks contribute to the overall popularity of an artist's primary work.
+
+#### Selected Fields
+
+- **Artist Information**:
+  - `artist_id`: Unique identifier for the artist.
+  - `artist_name`: Name of the artist.
+
+- **Popularity Metrics**:
+  - `feat_songs_popularity`: Average popularity of songs where the artist is featured.
+  - `main_songs_popularity`: Average popularity of the artist's main songs.
+
+#### Ordering
+The results are ordered by `feat_songs_popularity` in descending order, followed by `main_songs_popularity`. This ordering highlights any potential relationships between the popularity of featured songs and the main songs of an artist.
+
+#### Purpose
+This view seeks to understand whether the success of an artist in collaborative roles translates into increased popularity for their solo work, providing insights into the dynamics of featuring in songs within the music industry.
+
+### What are the genres that are very popular but don't have many songs - that is, what kind genres should we produce if we want high popularity and low competition?
+
+The `genre_niche` view aims to identify genres that exhibit high popularity while having a relatively low number of songs. This analysis is valuable for understanding which genres might be less competitive yet still appealing to audiences, guiding production efforts toward potentially successful niches.
+
+#### Selected Fields
+
+- **Genre Information**:
+  - `genre_id`: Unique identifier for the genre.
+  - `genre`: Name of the genre.
+
+- **Song Metrics**:
+  - `tracks_in_genre_main`: Number of songs classified as the main genre.
+  - `tracks_in_genre_sub`: Number of songs classified as subgenres.
+
+- **Popularity Metrics**:
+  - `tracks_in_genre_main_popularity_avg`: Average popularity of songs in the main genre.
+  - `tracks_in_genre_sub_popularity_avg`: Average popularity of songs in the subgenres.
+
+#### Filtering Criteria
+- The view filters genres to include only those where the total number of songs (both main and subgenres) is between 50 and the average number of songs per genre across the dataset. This definition of "not many songs" ensures that we are looking for genres that have a good amount of popularity but are not oversaturated with content.
+
+#### Ordering
+The results are ordered by `tracks_in_genre_main_popularity_avg` in descending order, followed by `tracks_in_genre_sub_popularity_avg`. This ordering highlights the most promising genres based on their average popularity metrics.
+
+#### Purpose
+This view provides insights into potential opportunities within the music industry, highlighting genres that may offer high popularity without significant competition. It serves as a strategic tool for artists and producers looking to explore less crowded musical territories while still appealing to a broad audience.
 
 ### Are certain genres associated with more explicit language?
+
+The `explicit_genres` view investigates the relationship between musical genres and the prevalence of explicit language in their songs. This analysis helps identify which genres are more likely to feature explicit content, providing insights for artists, producers, and audiences.
+
+#### Selected Fields
+
+- **Genre Information**:
+  - `genre_id`: Unique identifier for the genre.
+  - `genre`: Name of the genre.
+
+- **Explicit Content Metrics**:
+  - `tracks_in_genre_main_explicit_pct`: Percentage of explicit tracks in the main genre.
+  - `tracks_in_genre_sub_explicit_pct`: Percentage of explicit tracks in the subgenres.
+
+#### Ordering Criteria
+The view orders genres by a calculated metric that represents the overall prevalence of explicit content: the formula combines the explicit percentages of main and subgenre tracks, weighted by the number of tracks in each category. This allows for a comprehensive assessment of explicit language usage across genres.
+
+#### Purpose
+This view aims to provide insights into the explicit content associated with various musical genres. By identifying genres with higher rates of explicit language, stakeholders in the music industry can make informed decisions about marketing, production, and audience targeting.
+
+### What is the relationship between genres' popularity aggregated on 3 different levels: songs, albums, and artists? Does the level of aggregation have an effect on popularity?
+
+The `genre_aggregation` view explores the relationship between the popularity of musical genres at three distinct levels: songs, albums, and artists. This analysis aims to understand whether the level of aggregation affects the perceived popularity of a genre.
+
+#### Selected Fields
+
+- **Genre Information**:
+  - `genre_id`: Unique identifier for the genre.
+  - `genre`: Name of the genre.
+
+- **Popularity Metrics**:
+  - `tracks_in_genre_main_popularity_avg`: Average popularity of tracks within the main genre.
+  - `albums_in_genre_main_popularity_avg`: Average popularity of albums associated with the main genre.
+  - `artist_in_genre_main_popularity_avg`: Average popularity of artists whose primary genre is the main genre.
+
+#### Ordering Criteria
+- The view orders genres based on the following criteria, in descending order:
+  - Average track popularity within the main genre.
+  - Average album popularity within the main genre.
+  - Average artist popularity associated with the main genre.
+
+#### Purpose
+This view is designed to provide insights into how the popularity of genres varies when measured at the levels of songs, albums, and artists. By analyzing the relationships between these different levels of aggregation, the music industry can better understand how popularity is perceived and what factors might influence it.
+
+## Extra features: triggers, events and materialized views
+
+### Triggers
+
+The following triggers are designed to automate the logging and deletion of corresponding data from various data warehouse tables when records are deleted from the main tables. Each trigger performs the following actions:
+
+- **Trigger on Albums Deletion** (`on_albums_delete`): 
+  - Activates after a deletion occurs on the `albums` table.
+  - Logs a message into the `messages` table indicating which album ID was deleted.
+  - Deletes the corresponding entry from the `albums_dw` table.
+
+- **Trigger on Artist Deletion** (`on_artist_delete`): 
+  - Activates after a deletion occurs on the `artist` table.
+  - Logs a message into the `messages` table indicating which artist ID was deleted.
+  - Deletes the corresponding entry from the `artist_dw` table.
+
+- **Trigger on Tracks Deletion** (`on_tracks_delete`): 
+  - Activates after a deletion occurs on the `tracks` table.
+  - Logs a message into the `messages` table indicating which track ID was deleted.
+  - Deletes the corresponding entry from the `tracks_dw` table.
+
+- **Trigger on Genres Deletion** (`on_genres_delete`): 
+  - Activates after a deletion occurs on the `genres` table.
+  - Logs a message into the `messages` table indicating which genre ID was deleted.
+  - Deletes the corresponding entry from the `genres_dw` table.
+
+These triggers help maintain data integrity and provide a history of deletions.
+
+### Events
+
+The following events are set up to automate the re-initialization of data warehouses (DW) and the updating of materialized views on a daily schedule. These events help maintain the accuracy and relevance of the data in the system:
+
+- **Update All DWs Event (`UpdateAllDWEvent`)**: 
+  - This event is scheduled to run every day at 12:30 PM, starting from `2024-10-11`, and will continue for two months.
+  - The purpose of this event is to re-initialize all data warehouses to track changes effectively. 
+  - When the event is triggered, it informs the user that the update is in progress, displaying a message directly on the screen to alert them.
+  - The event logs the start and successful completion of the update in the `messages` table and calls procedures to update the `albums_dw`, `artist_dw`, `tracks_dw`, and `genres_dw` tables.
+
+- **Update Materialized Views Event (`UpdateMVs`)**: 
+  - This event is scheduled to run every day at midnight, starting from `2024-10-11`, and will also continue for two months.
+  - It is designed to update materialized views, ensuring they reflect the most recent data.
+  - Similar to the previous event, it provides immediate feedback to the user about the update status, logs the progress in the `messages` table, and calls procedures to update the relevant materialized views.
+
+These events are essential for maintaining the data integrity and performance of the data warehouse system by ensuring that data is consistently updated and accurate.
+
+### Materialized views
+
+The views for the first two questions are also implemented in a materialized view form. The materialized views are implemented using stored proceedures. They are updated (more precisely, re-built from scratch) by the `UpdateMVs` event scheduled once a day at midnight.
 
 # A note on what happened to IMDb...
 
