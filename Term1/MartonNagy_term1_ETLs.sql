@@ -6,7 +6,7 @@ Program: Business Analytics MS
 --------------------------------------------------
 Note: The below script ran without errors on my computer.
 However, some statements require a few minutes (no more than 5) to run if you do not have a powerful setup.
-If you encounter erformance issues while running the script, please consider
+If you encounter performance issues while running the script, please consider
 cutting the sample size and running the scripts on a smaller sample.
 */
 use spotify;
@@ -18,30 +18,70 @@ create table messages(message varchar(500));
 
 -- DATA WAREHOUSES
 -- First let's create a DW for albums!
--- This works fine, but needs some refactorization:
--- aggregations would be better in subqueries joined in from to albums
 drop procedure if exists UpdateAlbumsDW;
 delimiter //
-create procedure UpdateAlbumsDW()
+create procedure UpdateAlbumsDW(in pr_mode int)
+-- pr_mode only controls the log message (initialization (0) or scheduled update (1))
 begin
 drop table if exists albums_dw;
+-- a unique ID is needed so that we can perform deletion with triggers later (same logic for all other DWs)
 create table albums_dw (primary key(album_id)) ignore
 select
-	albums.album_id,
-    album_name,
-    total_tracks,
-    album_popularity,
-    release_date,
-    album_type,
-    label,
-	albums.artist_id,
-    artist.name,
-    artist.artist_popularity,
-    artist.followers,
-	avg(feat_artists.artist_popularity) as avg_feat_artist_popularity, 
+-- album facts
+albums.album_id,
+album_name,
+total_tracks,
+album_popularity,
+release_date,
+album_type,
+label,
+total_duration_s, -- total duration of the album in sec
+-- artist dimension
+albums.artist_id,
+artist.name,
+artist.artist_popularity,
+artist.followers,
+avg_feat_artist_popularity, -- average of popularity of featuring artists on the album
+avg_feat_artist_followers, -- average of followers of featuring artists on the album
+count_feat_artist, -- count of featuring artists on the album
+-- genre dimension
+genres.genre as artist_main_genre,
+-- tracks dimension
+explicit_tracks_pct,
+avg_danceability,
+avg_energy,
+avg_loudness,
+avg_speechiness,
+avg_acousticness,
+avg_instrumentalness,
+avg_liveness,
+avg_valence
+from (((((albums
+left join artist on albums.artist_id = artist.id)
+left join (select artist_id, genre_id from artist_to_genre where is_main_genre = 1) as ag on ag.artist_id = artist.id)
+left join genres on ag.genre_id = genres.id)
+left join (
+    select
+	feat_artists.album_id,
+    avg(feat_artists.artist_popularity) as avg_feat_artist_popularity, 
 	avg(feat_artists.followers) as avg_feat_artist_followers, 
-	count(distinct feat_artists.artist_id) as count_feat_artist,
-    genres.genre as artist_main_genre,
+	count(distinct feat_artists.artist_id) as count_feat_artist
+from
+	(select distinct artr.artist_id, a.artist_popularity, a.followers, tral.album_id
+	from artist_to_tracks artr
+	left join artist a on a.id = artr.artist_id
+	left join tracks_to_albums tral on tral.track_id = artr.track_id
+	where artr.is_main_artist = 0) as feat_artists
+group by album_id
+) as feats on albums.album_id = feats.album_id)
+left join (
+select ta.album_id, sum(t.duration_ms) / 1000 as total_duration_s
+	from tracks_to_albums ta
+	left join tracks t on ta.track_id = t.id
+	group by ta.album_id) as td on albums.album_id = td.album_id)
+left join (
+select
+	album_id,
 	avg(is_explicit)*100 as explicit_tracks_pct,
 	avg(danceability) as avg_danceability,
 	avg(energy) as avg_energy,
@@ -50,47 +90,38 @@ select
     avg(acousticness) as avg_acousticness,
     avg(instrumentalness) as avg_instrumentalness,
     avg(liveness) as avg_liveness,
-    avg(valence) as avg_valence,
-    total_durations.total_duration_s
-	from (((((((albums
-		left join artist on albums.artist_id = artist.id)
-			left join (select artist_id, genre_id from artist_to_genre where is_main_genre = 1) as ag on ag.artist_id = artist.id)
-				left join genres on ag.genre_id = genres.id)
-					left join tracks_to_albums on tracks_to_albums.album_id = albums.album_id)
-						left join tracks on tracks_to_albums.track_id = tracks.id)
-								left join 
-									(select ta.album_id, sum(t.duration_ms) / 1000 as total_duration_s
-									from tracks_to_albums ta
-									inner join tracks t on ta.track_id = t.id
-									group by ta.album_id)
-								as total_durations on total_durations.album_id = albums.album_id)
-								left join (
-									select distinct artr.artist_id, a.artist_popularity, a.followers, tral.album_id
-									from artist_to_tracks artr
-									inner join artist a on a.id = artr.artist_id
-									inner join tracks_to_albums tral on tral.track_id = artr.track_id
-									where artr.is_main_artist = 0)
-								as feat_artists on feat_artists.album_id = albums.album_id)
-	group by albums.album_id, artist_main_genre;
+    avg(valence) as avg_valence
+from
+	tracks_to_albums
+    left join tracks on tracks_to_albums.track_id = tracks.id
+group by album_id
+) as track_avgs on albums.album_id = track_avgs.album_id;
 
 -- logging into messages
-insert into messages select concat(now(), ': added ', (select count(*) from albums_dw), ' rows to abums_dw on initialization.');
+if pr_mode = 0 then -- initialization mode
+	insert into messages
+    select concat(now(), ': added ', (select count(*) from albums_dw), ' rows to abums_dw on initialization.');
+else -- update mode
+	insert into messages
+    select concat(now(), ': re-initialized albums_dw on scheduled update, added ', (select count(*) from albums_dw), ' rows.');
+end if;
 end //
 delimiter ;
 
 -- now we can initialize the albums DW
-call UpdateAlbumsDW();
+-- takes around 90 secs with 1 GB RAM allocated to server
+call UpdateAlbumsDW(0);
+select * from messages;
 
 -- Now we have a functioning DW on albums. Let's move on to tracks!
--- This works fine, but needs some refactorization:
--- aggregations would be better in subqueries joined in from to tracks
 drop procedure if exists UpdateTracksDW;
 delimiter //
-create procedure UpdateTracksDW()
+create procedure UpdateTracksDW(in pr_mode int)
 begin
 drop table if exists tracks_dw;
 create table tracks_dw (primary key (id)) ignore
 select
+-- tracks facts
 	tracks.id as id,
     track_name,
     track_popularity,
@@ -108,18 +139,21 @@ select
     tempo,
     duration_ms / 1000 as duration_s,
     time_signature,
+-- albums dimension
     albums.album_name,
     albums.total_tracks,
     albums.release_date,
     albums.album_popularity,
     album_aggregates.album_duration_s,
     album_aggregates.albumtracks_avg_popularity,
+-- artist dimension
     main_artist.name as main_artist_name,
     avg(if(artist_to_tracks.is_main_artist = 1, artist.artist_popularity, null)) as main_artist_popularity,
     avg(if(artist_to_tracks.is_main_artist = 1, artist.followers, null)) as main_artist_followers,
 	avg(if(artist_to_tracks.is_main_artist = 0, artist.artist_popularity, null)) as feat_artist_avg_popularity,
     avg(if(artist_to_tracks.is_main_artist = 0, artist.followers, null)) as feat_artist_avg_followers,
     sum(if(artist_to_tracks.is_main_artist = 0, 1, 0)) as feat_artist_count,
+-- genre dimension
     track_to_genre.genre as main_artist_genre
 from (((((((tracks
 	left join tracks_to_albums on tracks.id = tracks_to_albums.track_id)
@@ -155,26 +189,35 @@ main_artist.name,
 track_to_genre.genre;
 
 -- logging into messages
-insert into messages select concat(now(), ': added ', (select count(*) from tracks_dw), ' rows to tracks_dw on initialization.');
+if pr_mode = 0 then -- initialization mode
+	insert into messages
+    select concat(now(), ': added ', (select count(*) from tracks_dw), ' rows to tracks_dw on initialization.');
+else -- update mode
+	insert into messages
+    select concat(now(), ': re-initialized tracks_dw on scheduled update, added ', (select count(*) from tracks_dw), ' rows.');
+end if;
 end //
 delimiter ;
 
 -- again, initialize the tracks DW
-call UpdateTracksDW();
+-- takes around 300 secs with 1 GB RAM allocated to server (tracks is by far tha largest table in my database)
+call UpdateTracksDW(0);
 select * from messages;
 
 -- Let's move on to artists and the respective data warehouse! The logic is the same as previously.
 drop procedure if exists UpdateArtistDW;
 delimiter //
-create procedure UpdateArtistDW()
+create procedure UpdateArtistDW(in pr_mode int)
 begin
 drop table if exists artist_dw;
 create table artist_dw (primary key (artist_id)) ignore
 select
+	-- artist facts
 	artist.id as artist_id,
     artist.name as artist_name,
     artist_popularity,
     followers,
+    -- tracks dimension
     main_songs_popularity,
     feat_songs_popularity,
     main_songs_count,
@@ -183,8 +226,10 @@ select
     avg_popularity_with_feat, -- average popularity of songs where there are featuring artists
     avg_popularity_with_high_follower_feat, -- average popularity of songs where there is a highly followed featuring artists
 											-- see definition below
+    -- albums dimension
     albums_count,
     avg_albums_popularity, -- average popularity of artist's albums
+    -- genres dimension
     sub_genres_count, -- artist's number of subgenres
     main_genre
 from artist
@@ -250,19 +295,25 @@ select
 ) as feat_art_agg on feat_art_agg.artist_id = artist.id;
 
 -- logging into messages
-insert into messages select concat(now(), ': added ', (select count(*) from artist_dw), ' rows to artist_dw on initialization.');
-
+if pr_mode = 0 then -- initialization mode
+	insert into messages
+    select concat(now(), ': added ', (select count(*) from artist_dw), ' rows to artist_dw on initialization.');
+else -- update mode
+	insert into messages
+    select concat(now(), ': re-initialized artist_dw on scheduled update, added ', (select count(*) from artist_dw), ' rows.');
+end if;
 end //
 delimiter ;
 
 -- initialize the artist DW
-call UpdateArtistDW();
+-- Takes around 120 secs with 1 GB RAM allocated to server.
+call UpdateArtistDW(0);
 select * from messages;
 
 -- Lastly, let's create the data warehouse on genres!
 drop procedure if exists UpdateGenresDW;
 delimiter //
-create procedure UpdateGenresDW()
+create procedure UpdateGenresDW(in pr_mode int)
 begin
 drop table if exists genres_dw;
 create table genres_dw (primary key (genre_id)) ignore
@@ -337,12 +388,18 @@ group by genre_id
 ) as genre_tracks on genre_tracks.genre_id = genres.id;
 
 -- logging into messages
-insert into messages select concat(now(), ': added ', (select count(*) from genres_dw), ' rows to genres_dw on initialization.');
-
+if pr_mode = 0 then -- initialization mode
+	insert into messages
+    select concat(now(), ': added ', (select count(*) from genres_dw), ' rows to genres_dw on initialization.');
+else -- update mode
+	insert into messages
+    select concat(now(), ': re-initialized genres_dw on scheduled update, added ', (select count(*) from genres_dw), ' rows.');
+end if;
 end //
 delimiter ;
 
-call UpdateGenresDW();
+-- Takes around 30 secs with 1 GB RAM allocated to server.
+call UpdateGenresDW(0);
 select * from messages;
 
 -- DELETION TRIGGERS
@@ -409,18 +466,23 @@ drop event if exists UpdateAllDWEvent;
 delimiter //
 -- this event re-initializes all DWs once every day during lunch break to keep track of changes
 -- it might have been better to use triggers and update all DWs on insertion, deletion, and update on every table
--- but that solution was a bit over my knowledge
+-- but that solution was a bit over my knowledge :)
 create event UpdateAllDWEvent
 on schedule every 24 hour
 starts '2024-10-11 12:30:00'
 ends '2024-10-11 12:30:00' + interval 2 month
 do
 	begin
-		call UpdateAlbumsDW();
-        call UpdateArtistDW();
-        call UpdateTracksDW();
-        call UpdateGenresDW();
+		-- I want this to appear on the screen directly, that is why I am not inserting into messages.
+        -- So that the user is aware what is happening.
+		select 'Attention: Now re-initializing all DWs on scheduled update! Some tables may be locked during the update.';
+        insert into messages select concat(now(), ': starting the scheduled UpdateAllDWEvent...');
+        call UpdateAlbumsDW(1);
+        call UpdateArtistDW(1);
+        call UpdateTracksDW(1);
+        call UpdateGenresDW(1);
         insert into messages select concat(now(), ': scheduled UpdateAllDWEvent happened successfully.');
+        select 'Scheduled update finished!';
 	end //
 delimiter ;
 
@@ -595,3 +657,92 @@ order by (tracks_in_genre_main_explicit_pct * tracks_in_genre_main
             (tracks_in_genre_main + tracks_in_genre_sub) desc;
 
 select * from explicit_genres;
+
+-- EXTRA: Materialized views for first 2 questions
+drop procedure if exists UpdateMVPopAlbums;
+delimiter //
+create procedure UpdateMVPopAlbums()
+begin
+	drop table if exists mv_pop_albums;
+    create table mv_pop_albums as
+		select
+			album_id,
+			album_name,
+			total_tracks,
+			album_popularity,
+			year(release_date) as release_year,
+			month(release_date) as release_month,
+			day(release_date) as release_day,
+			dayofweek(release_date) as release_dayofweek,
+			time(release_date) as release_time,
+			album_type,
+			label,
+			artist_id,
+			name,
+			artist_popularity,
+			followers,
+			avg_feat_artist_popularity, 
+			avg_feat_artist_followers, 
+			count_feat_artist,
+			artist_main_genre,
+			explicit_tracks_pct,
+			avg_danceability,
+			avg_energy,
+			avg_loudness,
+			avg_speechiness,
+			avg_acousticness,
+			avg_instrumentalness,
+			avg_liveness,
+			avg_valence,
+			total_duration_s
+	from albums_dw
+	where artist_main_genre like '%pop%'
+	order by album_popularity desc;
+    
+    insert into messages select concat(now(), ': updated the mv_pop_albums materialized view.');
+end //
+delimiter ;
+
+call UpdateMVPopAlbums();
+
+drop procedure if exists UpdateMVAlbumsPopularityDate;
+delimiter //
+create procedure UpdateMVAlbumsPopularityDate()
+begin
+drop table if exists mv_albums_popularity_date;
+create table mv_albums_popularity_date as
+select
+	if(year(release_date) >= 2010 and year(release_date) <= 2015, '2010-2015',
+		if(year(release_date) >= 2016 and year(release_date) <= 2023,'2016-2013', null)) as release_year_category,
+	avg(album_popularity) as avg_album_popularity,
+    std(album_popularity) as std_album_popularity,
+    min(album_popularity) as min_album_popularity,
+    max(album_popularity) as max_album_popularity,
+    count(album_popularity) as count_album_popularity
+from albums_dw
+group by release_year_category
+having release_year_category is not null;
+
+insert into messages select concat(now(), ': updated the mv_albums_popularity_date materialized view.');
+end //
+delimiter ;
+
+call UpdateMVAlbumsPopularityDate();
+
+-- event to update the materialized views daily at midnight
+drop event if exists UpdateMVs;
+delimiter //
+create event UpdateMVs
+on schedule every 24 hour
+starts '2024-10-11 00:00:00'
+ends '2024-10-11 00:00:00' + interval 2 month
+do
+	begin
+		select 'Updating materialized views, tables may be locked!';
+        insert into messages select concat(now(), ': scheduled update of materialized views started.');
+		call UpdateMVPopAlbums();
+        call UpdateMVAlbumsPopularityDate();
+        insert into messages select concat(now(), ': scheduled update of materialized views finished.');
+        select 'Successfully updated materialized views.';
+	end //
+delimiter ;
