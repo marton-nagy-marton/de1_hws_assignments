@@ -17,7 +17,7 @@ drop table if exists messages;
 create table messages(message varchar(500));
 
 -- DATA WAREHOUSES
--- First let's create a DW for albums!
+-- First let's create a DWalbums_dwalbums for albums!
 drop procedure if exists UpdateAlbumsDW;
 delimiter //
 create procedure UpdateAlbumsDW(in pr_mode int)
@@ -543,7 +543,27 @@ having release_year_category is not null;
 
 select * from albums_popularity_date;
 
--- Q3: What are the determinant factors of Taylor Swift's songs - that is
+-- Q3: Is there a relationship between an album's duration and the characteristics of its songs?
+drop view if exists duration_determinants;
+create view duration_determinants as
+select
+	album_id,
+    album_name,
+    total_duration_s,
+	avg_danceability,
+	avg_energy,
+    avg_loudness,
+    avg_speechiness,
+    avg_acousticness,
+    avg_instrumentalness,
+    avg_liveness,
+    avg_valence
+from albums_dw
+where total_duration_s is not null;
+
+select * from duration_determinants;
+
+-- Q4: What are the determinant factors of Taylor Swift's songs - that is
 -- what kind of songs should she produce to maximize popularity?
 drop view if exists taylor_swift_songs;
 create view taylor_swift_songs as
@@ -579,7 +599,7 @@ order by track_popularity desc;
 
 select * from taylor_swift_songs;
 
--- Q4: How did the average valence of songs evolve over time?
+-- Q5: How did the average valence of songs evolve over time?
 -- Is there a pattern, or at least some bumps that we might attribute to major world events?
 drop view if exists valence_ts;
 create view valence_ts as
@@ -595,7 +615,27 @@ order by release_year, release_month;
 
 select * from valence_ts;
 
--- Q5: Does an artist's follower count influence the popularity of their songs?
+-- Q6: Which songs were one-time hits - that is, which songs have a much higher popularity than the average popularity of the songs on the album?
+drop view if exists one_time_hits;
+create view one_time_hits as
+select
+	id,
+    track_name,
+    track_popularity,
+    albumtracks_avg_popularity
+from tracks_dw
+-- much higher is defined as at least 25 times higher
+where track_popularity > albumtracks_avg_popularity * 25
+-- only include albums with at least 10 songs
+and total_tracks >= 10
+-- not interested in zero popularity
+and track_popularity != 0
+and albumtracks_avg_popularity != 0
+order by track_popularity desc;
+
+select * from one_time_hits;
+
+-- Q7: Does an artist's follower count influence the popularity of their songs?
 drop view if exists artist_followers_popularity;
 create view artist_followers_popularity as
 select
@@ -608,8 +648,7 @@ order by artist_popularity desc, followers desc;
 
 select * from artist_followers_popularity;
 
--- Q6: Does having a high-follower count featuring artist increase the popularity of an artist's song
--- relative to where there is no featuring artist?
+-- Q8: Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
 drop view if exists feat_effects;
 create view feat_effects as
 select
@@ -623,8 +662,20 @@ order by avg_popularity_no_feat desc, avg_popularity_with_feat desc, avg_popular
 
 select * from feat_effects;
 
--- Q7: What are the genres that are very popular but don't have many songs - that is,
--- what kind of genres should we produce if we want high popularity and low competition?
+-- Q9: Does the high popularity of songs where the artist only features increase their main songs' popularity as well?
+drop view if exists feature_spillovers;
+create view feature_spillovers as
+select
+	artist_id,
+    artist_name,
+    feat_songs_popularity,
+    main_songs_popularity
+from artist_dw
+order by feat_songs_popularity desc, main_songs_popularity desc;
+
+select * from feature_spillovers;
+
+-- Q10: What are the genres that are very popular but don't have many songs - that is, what kind of genres should we produce if we want high popularity and low competition?
 drop view if exists genre_niche;
 create view genre_niche as
 select
@@ -643,7 +694,7 @@ order by tracks_in_genre_main_popularity_avg desc, tracks_in_genre_sub_popularit
 
 select * from genre_niche;
 
--- Q8: Are certain genres associated with more explicit language?
+-- Q11: Are certain genres associated with more explicit language?
 drop view if exists explicit_genres;
 create view explicit_genres as
 select
@@ -657,6 +708,24 @@ order by (tracks_in_genre_main_explicit_pct * tracks_in_genre_main
             (tracks_in_genre_main + tracks_in_genre_sub) desc;
 
 select * from explicit_genres;
+
+-- Q12: What is the relationship between genres' popularity aggregated on 3 different levels: songs, albums, and artists?
+-- Does the level of aggregation have an effect on popularity?
+drop view if exists genre_aggregation;
+create view genre_aggregation as
+select
+	genre_id,
+    genre,
+    tracks_in_genre_main_popularity_avg,
+    albums_in_genre_main_popularity_avg,
+	artist_in_genre_main_popularity_avg
+from genres_dw
+order by
+    tracks_in_genre_main_popularity_avg desc,
+    albums_in_genre_main_popularity_avg desc,
+	artist_in_genre_main_popularity_avg desc;
+	
+select * from genre_aggregation;
 
 -- EXTRA: Materialized views for first 2 questions
 drop procedure if exists UpdateMVPopAlbums;
