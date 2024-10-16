@@ -585,6 +585,18 @@ The `taylor_swift_songs` view analyzes the characteristics of Taylor Swift's tra
 #### Ordering
 The results are ordered by `track_popularity` in descending order, allowing for easy identification of the most popular tracks.
 
+#### Charts
+
+***Figure 6: Regressions of Taylor Swift's track popularity on certain quantitative variables***
+
+![taylor_swift_regressions](/Term1/assets/q4.png)
+
+Some of the most important facts we can derive from the above graphs are:
+* more energetic songs tend to be more popular;
+* the less speechy a song is, the more popular it tends to be;
+* the later a song is released during the week, the more popular it gets on average;
+* Taylor Swift's songs tend to get more popular over time.
+
 ### How did the average valence of songs evolve over time?
 
 The `valence_ts` view investigates the evolution of the average valence score of songs released over time. Valence is a measure of musical positivity or emotional value, and this analysis aims to identify trends and potential correlations with significant world events.
@@ -605,6 +617,14 @@ The `valence_ts` view investigates the evolution of the average valence score of
 
 #### Purpose
 This view enables an analysis of trends in the emotional content of music over time, potentially highlighting patterns or significant changes that may correspond with major world events.
+
+#### Chart
+
+The below figure might give us an idea on how the average valence of songs evolved over time (the count of songs has also been plotted to show that data availibility is very much skewed towards more recent songs). One of the key message of this chart is that songs tend to less and less positive since the 2008 financial crises.
+
+***Figure 7: Average valence and song count over time (monthly, with 12-month moving averages)***
+
+![valence_time_series](/Term1/assets/q5.png)
 
 ### Which songs were one-time hits - that is, which songs have a much higher popularity than the average popularity of songs on the album?
 
@@ -632,6 +652,14 @@ The results are ordered by `track_popularity` in descending order, highlighting 
 #### Purpose
 This view allows for the identification of tracks that became standout hits, providing insights into songs that significantly exceeded the popularity expectations set by their albums.
 
+#### Chart
+
+Below there is a scatterplot of the songs that qualify as one time hits (track popularity against albums' songs average popularity).
+
+***Figure 8: Songs qualifying as one-time-hits***
+
+![one time hits](/Term1/assets/q6.png)
+
 ### Does an artist's follower count influence the popularity of their songs?
 
 The `artist_followers_popularity` view examines the relationship between an artist's follower count and the popularity of their songs. This analysis seeks to determine whether there is a correlation between the number of followers an artist has and their overall popularity within the music industry.
@@ -649,6 +677,14 @@ The results are ordered first by `artist_popularity` in descending order and the
 
 #### Purpose
 This view aims to provide insights into whether having a higher follower count translates into greater song popularity, allowing for further analysis of trends and correlations in the music industry.
+
+#### Chart
+
+The results were plotted on the below regression plot. For better visibility, I only included artists with more than 1M followers. From the plot, it is clearly visible, that there is a relationship between artists' follower count and popularity (just as common sense would suggest).
+
+***Figure 9: Regression of artists' popularity against follower counts***
+
+![artist popularity vs followers](/Term1/assets/q7.png)
 
 ### Does having a high-follower count featuring artist increase the popularity of an artist's song relative to where there is no featuring artist?
 
@@ -671,6 +707,16 @@ The results are ordered by `avg_popularity_no_feat` in descending order, followe
 #### Purpose
 This view aims to clarify the relationship between collaboration with high-follower count artists and the overall popularity of an artist's songs, allowing for informed decisions about collaborations in future music projects.
 
+#### Charts
+
+The three scenarios in the view (no feat. artist, with feat. artist, with high follower-count feat artist) were plotted on three violin plots to compare the distributions.
+
+***Figure 10: Violin plots of the three scenarios***
+
+![feat effects](/Term1/assets/q8.png)
+
+From the plot, it is clearly visible, that featuring artists contribute heavily to song's popularity. However, having a high-follower count feat. does not necessarily provide even more popularity. 
+
 ### Does the high popularity of songs where the artist only features increase their main songs' popularity as well?
 
 The `feature_spillovers` view examines the potential relationship between the popularity of songs in which an artist is featured and the popularity of their main songs. This analysis aims to determine if there is a "spillover" effect, where high-performing collaborative tracks contribute to the overall popularity of an artist's primary work.
@@ -690,6 +736,16 @@ The results are ordered by `feat_songs_popularity` in descending order, followed
 
 #### Purpose
 This view seeks to understand whether the success of an artist in collaborative roles translates into increased popularity for their solo work, providing insights into the dynamics of featuring in songs within the music industry.
+
+#### Chart
+
+The question may be examined using a regression plot.
+
+***Figure 11: Regression of main songs' popularity agains feat. songs' popularity***
+
+![main vs feat](/Term1/assets/q9.png)
+
+From the figure, we can easily deduce that high popularity featured songs correlate strongly with the popularity of main songs.
 
 ### What are the genres that are very popular but don't have many songs - that is, what kind genres should we produce if we want high popularity and low competition?
 
@@ -718,6 +774,14 @@ The results are ordered by `tracks_in_genre_main_popularity_avg` in descending o
 #### Purpose
 This view provides insights into potential opportunities within the music industry, highlighting genres that may offer high popularity without significant competition. It serves as a strategic tool for artists and producers looking to explore less crowded musical territories while still appealing to a broad audience.
 
+#### Charts
+
+The below chart shows the identified niche genres for both main and sub-genres.
+
+***Figure 12: Identified niche genres***
+
+![niche genres](/Term1/assets/q10.png)
+
 ### Are certain genres associated with more explicit language?
 
 The `explicit_genres` view investigates the relationship between musical genres and the prevalence of explicit language in their songs. This analysis helps identify which genres are more likely to feature explicit content, providing insights for artists, producers, and audiences.
@@ -737,6 +801,14 @@ The view orders genres by a calculated metric that represents the overall preval
 
 #### Purpose
 This view aims to provide insights into the explicit content associated with various musical genres. By identifying genres with higher rates of explicit language, stakeholders in the music industry can make informed decisions about marketing, production, and audience targeting.
+
+#### Chart
+
+The below chart shows the identified explicit genres.
+
+***Figure 13: Identified explicit genres***
+
+![explicit genres](/Term1/assets/q11.png)
 
 ### What is the relationship between genres' popularity aggregated on 3 different levels: songs, albums, and artists? Does the level of aggregation have an effect on popularity?
 
@@ -761,6 +833,14 @@ The `genre_aggregation` view explores the relationship between the popularity of
 
 #### Purpose
 This view is designed to provide insights into how the popularity of genres varies when measured at the levels of songs, albums, and artists. By analyzing the relationships between these different levels of aggregation, the music industry can better understand how popularity is perceived and what factors might influence it.
+
+#### Charts
+
+The below violin plots show that theres is a clear difference in the average popularity of genres when aggregated on different levels.
+
+***Figure 14: Distribution of genres' popularity aggrageted on three levels***
+
+![genre aggregation](/Term1/assets/q12.png)
 
 ## Extra features: triggers, events and materialized views
 
@@ -810,6 +890,10 @@ These events are essential for maintaining the data integrity and performance of
 ### Materialized views
 
 The views for the first two questions are also implemented in a materialized view form. The materialized views are implemented using stored proceedures. They are updated (more precisely, re-built from scratch) by the `UpdateMVs` event scheduled once a day at midnight.
+
+### Charts
+
+As you could see above, I have created a couple of charts to provide intuitive answers to my analytical questions. Note however, that these answers are merely intuitive - that is they are just there to provide a first impression on what might be going on, but for a clear answer, more sophisticated analysis would be needed. Also, these charts were created mainly for me to practice charting in Python for one of my other courses. So they are included here only because they use the same data as my term project.
 
 # A note on what happened to IMDb...
 
