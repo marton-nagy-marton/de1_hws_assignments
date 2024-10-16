@@ -64,6 +64,10 @@ Notice, that these questions can be grouped in 3s: #1-3 relates to albums, #4-6 
 * maintains ETLs up-to-date,
 * and creates views (data mart) based on the data warehouses to provide to for answering the analytical questions.
 
+[`views_chart_generator.py`](views_chart_generator.py): This script connects to the local MySQL server, extracts the views from the `spotify` database to Pandas dataframes and creates charts/tables for each analytical question.
+> [!Note]
+> This charting code stemmed from my need to practice charting for one of my other courses, so this is not an integral part of my term project. However, as I used the `spotify` dataset, I decided to include this script and the resulting charts in my project here as well.
+
 ## Data
 ### Sources
 
@@ -463,6 +467,15 @@ This view, `pop_albums`, provides insights into what influences an album's popul
 #### Ordering
 The results are ordered by `album_popularity` in descending order, so the most popular albums appear first in the dataset.
 
+#### Charts
+I have charted a few regression plots based on the view to uncover which factors influence most the albums' popularity (see in Figure 3).
+
+***Figure 3: Regressions of albums_popularity on certain quantitative variables***
+
+![albums_popularity_regressions](/Term1/assets/q1.png)
+
+Based on this, we can see that average song level variables do not really have an influence on album popularity. However, artists' popularity and follower counts show a strong correlation with the popularity of the albums. This means that more popular artists tend to have more popular albums.
+
 ### How does albums' popularity differ between songs from 2010 to 2015 and 2016 to 2023?
 
 The `albums_popularity_date` view analyzes the differences in album popularity between two distinct time periods: 2010-2015 and 2016-2023. This view aggregates album popularity data to identify trends and patterns based on the release year of the albums.
@@ -483,6 +496,14 @@ The `albums_popularity_date` view analyzes the differences in album popularity b
 #### Grouping and Filtering
 - The results are grouped by `release_year_category`, allowing for a comparison of album popularity between the two defined periods.
 - The `having` clause ensures that only non-null categories are included in the final output, eliminating any rows without valid release year categories.
+
+#### Output table
+
+***Figure 4: Album popularity aggregate differences between 2010-2015 and 2016-2023***
+
+![album popularity in two eras](/Term1/assets/q2.png)
+
+From the output table, we can see that more recent songs tend to be slightly more popular tend older ones (this is the same tendency we can see on Figure 3's last plot).
 
 ### Is there a relationship between an album's duration and the characteristics of its songs?
 
@@ -509,6 +530,16 @@ The `duration_determinants` view explores the potential relationship between an 
 
 #### Filtering Criteria
 The view only includes albums where `total_duration_s` is not null, ensuring that all analyzed albums have defined durations for accurate analysis.
+
+#### Charts
+
+Just like for question #1, I have plotted a few regression plots of albums' duration against different factors that might influence it. Note, that the dependent variable has been log-transformed.
+
+***Figure 5: Regressions of ln(total_duration_s) on certain quantitative variables***
+
+![albums_duration_regressions](/Term1/assets/q3.png)
+
+From the results, we can see some interesting tendencies. For example more danceable albums tend to be shorter, and the same stands for loudness and speechiness. However, the results from these regressions are very noisy, so no clear-cut conclusions can be drawn.
 
 ### What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
 
