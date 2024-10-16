@@ -1,7 +1,6 @@
 import pymysql
 import seaborn as sns
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import pandas as pd
 import numpy as np
@@ -9,9 +8,10 @@ import warnings
 warnings.filterwarnings('ignore')
 import textwrap
 import os
+import getpass
 
 username = input('Please provide your MySQL username! ')
-password = input('Please provide your MySQL password! ')
+password = getpass.getpass(prompt = 'Please provide your MySQL password! ')
 
 #connect to local MySQL server
 spotify = pymysql.connect(
@@ -20,6 +20,8 @@ spotify = pymysql.connect(
     password= password, # your MySQL password
     database='spotify'
 )
+
+print('Connected to server.')
 
 #import views as dataframes
 pop_albums = pd.read_sql('select * from pop_albums',spotify)
@@ -35,10 +37,17 @@ genre_niche = pd.read_sql('select * from genre_niche',spotify)
 explicit_genres = pd.read_sql('select * from explicit_genres',spotify)
 genre_aggregation = pd.read_sql('select * from genre_aggregation',spotify)
 
+print('Views fetched.')
+
 #Close connection
 spotify.close()
 
-os.mkdir('charts')
+print('Connection closed.')
+
+try:
+    os.mkdir('charts')
+except:
+    print('Charts directory already exists, saving charts there.')
 
 #Q1
 # Function to wrap titles
@@ -98,6 +107,8 @@ axes[14].tick_params(axis='both', labelsize=8)
 plt.tight_layout()
 plt.savefig('charts/q1.png', bbox_inches='tight')
 
+print('1st chart done.')
+
 #Q2
 # Format float values to 2 decimal places
 albums_popularity_date['avg_album_popularity'] = albums_popularity_date['avg_album_popularity'].map('{:.2f}'.format)
@@ -127,6 +138,8 @@ for key, cell in table.get_celld().items():
 plt.tight_layout()
 plt.savefig('charts/q2.png', bbox_inches='tight')
 
+print('2nd chart done.')
+
 #Q3
 numeric_columns = ["avg_danceability", "avg_energy", "avg_loudness", "avg_speechiness", "avg_acousticness", "avg_instrumentalness", "avg_liveness","avg_valence"]
 # Create a grid of regplots
@@ -150,6 +163,8 @@ for j in range(len(numeric_columns), len(axes)):
 
 plt.tight_layout()
 plt.savefig('charts/q3.png', bbox_inches='tight')
+
+print('3rd chart done.')
 
 #Q4
 numeric_columns = ['danceability','energy', 'key_signature', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_s',
@@ -205,6 +220,8 @@ axes[17].tick_params(axis='both', labelsize=8)
 plt.tight_layout()
 plt.savefig('charts/q4.png', bbox_inches='tight')
 
+print('4th chart done.')
+
 #Q5
 valence_ts['release_date'] = pd.to_datetime(
     dict(year=valence_ts['release_year'], 
@@ -256,6 +273,8 @@ ax2.legend(loc='upper right', bbox_to_anchor=(1, 1))
 plt.tight_layout()
 plt.savefig('charts/q5.png', bbox_inches='tight')
 
+print('5th chart done.')
+
 #Q6
 one_time_hits
 def label_point(x, y, val, ax):
@@ -279,6 +298,8 @@ label_point(one_time_hits.albumtracks_avg_popularity,
 plt.tight_layout()
 plt.savefig('charts/q6.png', bbox_inches='tight')
 
+print('6th chart done.')
+
 #Q7
 fig, ax = plt.subplots(figsize=(10,5))
 sns.regplot(data=artist_followers_popularity[(artist_followers_popularity['followers'] > 1000000)], 
@@ -291,6 +312,8 @@ ax.set_title('Regression of artist_popularity vs followers\n(limited to artists 
 # Show the plot
 plt.tight_layout()
 plt.savefig('charts/q7.png', bbox_inches='tight')
+
+print('7th chart done.')
 
 #Q8
 fig, axes = plt.subplots(nrows = 1, ncols = 3, figsize=(10, 5))  # Set the figure size
@@ -308,6 +331,8 @@ for i in range(0,3):
 plt.tight_layout()
 plt.savefig('charts/q8.png', bbox_inches='tight')
 
+print('8th chart done.')
+
 #Q9
 fig, ax = plt.subplots(figsize=(10,5))
 sns.regplot(data=feature_spillovers, 
@@ -320,6 +345,8 @@ ax.set_title('Regression of main_songs_popularity vs feat_songs_popularity')
 # Show the plot
 plt.tight_layout()
 plt.savefig('charts/q9.png', bbox_inches='tight')
+
+print('9th chart done.')
 
 #Q10
 def label_point(x, y, val, ax):
@@ -359,6 +386,8 @@ fig.suptitle('Scatterplots of genre average popularaties vs tracks in the genre\
 # Show the plot
 plt.tight_layout()
 plt.savefig('charts/q10.png', bbox_inches='tight')
+
+print('10th chart done.')
 
 #Q11
 def label_point(x, y, val, ax):
@@ -416,6 +445,8 @@ ax.vlines(x = 90, ymin = 90, ymax = 100, linestyle = '--', color = 'orange')
 plt.tight_layout()
 plt.savefig('charts/q11.png', bbox_inches='tight')
 
+print('11th chart done.')
+
 #Q12
 fig, axes = plt.subplots(nrows = 1, ncols = 3, figsize=(10, 5))  # Set the figure size
 sns.violinplot(data=genre_aggregation['tracks_in_genre_main_popularity_avg'], ax = axes[0], fill = False, cut = 2, inner = 'box',
@@ -431,5 +462,7 @@ for i in range(0,3):
     axes[i].set_ylabel('')
 plt.tight_layout()
 plt.savefig('charts/q12.png', bbox_inches='tight')
+
+print('12th chart done.')
 
 
