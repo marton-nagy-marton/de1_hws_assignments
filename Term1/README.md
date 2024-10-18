@@ -47,12 +47,12 @@ From this point on, you can follow this roadmap:
 4. You should end up with the appropriate data warehouses, data marts, as well as some extre features: triggers, events, and some materialized views.
 5. Download the [`views_chart_generator.py`](views_chart_generator.py) Python script.
 6. Please verify that the following packages are installed in your environment: `pymysql`, `seaborn`, `matplotlib`, `mpl_toolkits`, `pandas`, `numpy`, `warnings`, `textwrap`, `os`, `getpass`.
-   * If you are using Anaconda, everything other than `pymysql` should be installed by default.
+   * If you are using Anaconda, everything other than `mysql.connector` should be installed by default.
    * If something is missing, please install it before running the script.
 7. Verify that your MySQL local server is running.
    * If you have created the database in a remote server, please adjust the following part of code accordingly:
 ```python
-spotify = pymysql.connect(
+spotify = mysql.connector.connect(
 host='localhost',
 user= username,    # your MySQL username
 password= password, # your MySQL password
