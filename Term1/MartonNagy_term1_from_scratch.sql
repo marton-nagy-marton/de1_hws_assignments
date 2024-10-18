@@ -353,6 +353,7 @@ insert ignore into tracks_revised
 select tracks.id, track_popularity, is_explicit, danceability, energy, key_signature, loudness, mode, speechiness, acousticness,
 instrumentalness, liveness, valence, tempo, feature_type, uri, track_href, analysis_url, features.duration_ms, time_signature, track_name,
 artists, artist_id, artist_0, artist_1, artist_2, artist_3, artist_4, artist_5, artist_6, artist_7, artist_8, artist_9, artist_10, artist_11
+-- only keeping tracks that have features data
 from tracks inner join albums on tracks.id = albums.track_id inner join features on tracks.id = features.id;
 
 
@@ -480,7 +481,7 @@ on delete no action
 on update no action;
 
 -- MySQL manual said it is good practice to create indexes on referenced fields before referencing, so I did that
-CREATE INDEX `idx_tracks_id`  ON `spotify`.`tracks` (id) COMMENT '' ALGORITHM DEFAULT LOCK DEFAULT;
+CREATE UNIQUE INDEX `idx_tracks_id`  ON `spotify`.`tracks` (id) COMMENT '' ALGORITHM DEFAULT LOCK DEFAULT;
 
 -- add relation to tracks table
 alter table artist_to_tracks
