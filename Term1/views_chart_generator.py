@@ -1,4 +1,4 @@
-import pymysql
+import mysql.connector
 import seaborn as sns
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
@@ -14,7 +14,7 @@ username = input('Please provide your MySQL username! ')
 password = getpass.getpass(prompt = 'Please provide your MySQL password! ')
 
 #connect to local MySQL server
-spotify = pymysql.connect(
+spotify = mysql.connector.connect(
     host='localhost',
     user= username,    # your MySQL username
     password= password, # your MySQL password
@@ -58,6 +58,8 @@ numeric_columns = ["explicit_tracks_pct","avg_danceability", "avg_energy", "avg_
                    "artist_popularity", "followers", "avg_feat_artist_popularity", "avg_feat_artist_followers", "count_feat_artist"]
 # Create a grid of regplots
 fig, axes = plt.subplots(nrows=5, ncols=3, figsize=(10, 20))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 axes = axes.flatten()  # Flatten to easily iterate over the axes
 
 for i, column in enumerate(numeric_columns[:]):
@@ -100,22 +102,21 @@ axes[14].set_xlabel('release_date', fontsize=8)
 axes[14].set_ylabel('album_popularity', fontsize=8)
 axes[14].tick_params(axis='both', labelsize=8)
 
-# Remove empty subplots if there are any
-#for j in range(len(numeric_columns), len(axes)):
-#    fig.delaxes(axes[j])
-
 plt.tight_layout()
-plt.savefig('charts/q1.png', bbox_inches='tight')
+plt.savefig('charts/q1.png', dpi = 150, bbox_inches='tight')
 
 print('1st chart done.')
 
 #Q2
-# Format float values to 2 decimal places
+# Format float values to 2 decimal places and add decimal separator
 albums_popularity_date['avg_album_popularity'] = albums_popularity_date['avg_album_popularity'].map('{:.2f}'.format)
 albums_popularity_date['std_album_popularity'] = albums_popularity_date['std_album_popularity'].map('{:.2f}'.format)
+albums_popularity_date['count_album_popularity'] = albums_popularity_date['count_album_popularity'].map('{:,d}'.format)
 
 # Create a figure and axis for the table
-fig, ax = plt.subplots(figsize=(10, 2))  # Adjust figure size as needed
+fig, ax = plt.subplots(figsize=(5, 1))  # Adjust figure size as needed
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 ax.axis('tight')
 ax.axis('off')
 
@@ -124,19 +125,20 @@ table = ax.table(cellText=albums_popularity_date.values, colLabels=albums_popula
 
 # Customize table style (academic formatting)
 table.auto_set_font_size(False)
-table.set_fontsize(10)
-#table.scale(1.2, 1.2)  # Scale the table for better appearance
+table.set_fontsize(12)
+table.scale(1.2, 1.2)  # Scale the table for better appearance
 
 # Customize colors and line thickness for an academic style
 table.auto_set_column_width(col=list(range(len(albums_popularity_date.columns))))  # Adjust column widths
 for key, cell in table.get_celld().items():
-    cell.set_linewidth(1.2)  # Set a thicker line for cell borders
+    cell.visible_edges = 'BT'
+    cell.set_linewidth(0)
+    cell.set_height(0.4)
     if key[0] == 0:  # Header row
         cell.set_text_props(weight='bold')  # Bold for the header
-        cell.set_facecolor('#D3D3D3')  # Light gray background for header
-
+        cell.set_linewidth(1)  # Set a thicker line for cell borders
 plt.tight_layout()
-plt.savefig('charts/q2.png', bbox_inches='tight')
+plt.savefig('charts/q2.png', bbox_inches='tight', dpi = 150)
 
 print('2nd chart done.')
 
@@ -144,6 +146,8 @@ print('2nd chart done.')
 numeric_columns = ["avg_danceability", "avg_energy", "avg_loudness", "avg_speechiness", "avg_acousticness", "avg_instrumentalness", "avg_liveness","avg_valence"]
 # Create a grid of regplots
 fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(10, 10))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 axes = axes.flatten()  # Flatten to easily iterate over the axes
 
 for i, column in enumerate(numeric_columns[:]):
@@ -162,7 +166,7 @@ for j in range(len(numeric_columns), len(axes)):
     fig.delaxes(axes[j])
 
 plt.tight_layout()
-plt.savefig('charts/q3.png', bbox_inches='tight')
+plt.savefig('charts/q3.png', bbox_inches='tight', dpi = 150)
 
 print('3rd chart done.')
 
@@ -171,6 +175,8 @@ numeric_columns = ['danceability','energy', 'key_signature', 'loudness', 'speech
                    'time_signature', 'album_duration_s', 'feat_artist_avg_popularity', 'feat_artist_avg_followers', 'feat_artist_count', 'release_dayofweek']
 # Create a grid of regplots
 fig, axes = plt.subplots(nrows=6, ncols=3, figsize=(10, 20))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 axes = axes.flatten()  # Flatten to easily iterate over the axes
 
 for i, column in enumerate(numeric_columns[:]):
@@ -213,12 +219,8 @@ axes[17].set_xlabel('release_date', fontsize=8)
 axes[17].set_ylabel('track_popularity', fontsize=8)
 axes[17].tick_params(axis='both', labelsize=8)
 
-# Remove empty subplots if there are any
-#for j in range(len(numeric_columns), len(axes)):
-#    fig.delaxes(axes[j])
-
 plt.tight_layout()
-plt.savefig('charts/q4.png', bbox_inches='tight')
+plt.savefig('charts/q4.png', bbox_inches='tight', dpi = 150)
 
 print('4th chart done.')
 
@@ -238,6 +240,8 @@ valence_ts_resampled['12_month_MA_count'] = valence_ts_resampled['count_songs'].
 
 # Create the figure and axis objects
 fig, ax1 = plt.subplots(figsize=(10, 5))  # Set the figure size
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 
 # Plot the avg(valence) data and the 12-month moving average on the first y-axis
 sns.lineplot(data=valence_ts_resampled, x=valence_ts_resampled.index, y='avg(valence)', color='green', alpha=0.5, linewidth = 0.5, ax=ax1, label='Avg valence')
@@ -269,9 +273,8 @@ ax2.tick_params(axis='y', labelsize=10)
 ax1.legend(loc='upper left', bbox_to_anchor=(0, 1))
 ax2.legend(loc='upper right', bbox_to_anchor=(1, 1))
 
-# Show the plot
 plt.tight_layout()
-plt.savefig('charts/q5.png', bbox_inches='tight')
+plt.savefig('charts/q5.png', bbox_inches='tight', dpi = 150)
 
 print('5th chart done.')
 
@@ -285,6 +288,8 @@ def label_point(x, y, val, ax):
         fontsize=5, wrap=True, snap=True, horizontalalignment = 'right', in_layout =True, rotation = 0)
 
 fig, ax = plt.subplots(figsize=(10,5))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 sns.scatterplot(data=one_time_hits, 
             x = 'albumtracks_avg_popularity', y = 'track_popularity', s = 10, color = 'green', alpha = 1)
 ax.set_xlim(left = 0, right = 1.5, auto = False)
@@ -296,12 +301,14 @@ label_point(one_time_hits.albumtracks_avg_popularity,
             one_time_hits.track_name, ax)
 
 plt.tight_layout()
-plt.savefig('charts/q6.png', bbox_inches='tight')
+plt.savefig('charts/q6.png', bbox_inches='tight', dpi = 300)
 
 print('6th chart done.')
 
 #Q7
 fig, ax = plt.subplots(figsize=(10,5))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 sns.regplot(data=artist_followers_popularity[(artist_followers_popularity['followers'] > 1000000)], 
             x = 'followers', y = 'artist_popularity', fit_reg = True, 
             line_kws = {'color' : 'k'}, scatter_kws={'s': 5, 'color': 'green', 'alpha': 0.5})
@@ -309,14 +316,15 @@ ax.set_ylim(top=100, bottom = 0, auto = False)
 ax.set_xlim(left = 0)
 ax.set_title('Regression of artist_popularity vs followers\n(limited to artists with more than 1M followers)')
 
-# Show the plot
 plt.tight_layout()
-plt.savefig('charts/q7.png', bbox_inches='tight')
+plt.savefig('charts/q7.png', bbox_inches='tight', dpi = 150)
 
 print('7th chart done.')
 
 #Q8
 fig, axes = plt.subplots(nrows = 1, ncols = 3, figsize=(10, 5))  # Set the figure size
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 sns.violinplot(data=feat_effects['avg_popularity_no_feat'], ax = axes[0], fill = False, cut = 2, inner = 'box',
                linewidth = 1, inner_kws = {'box_width' : 20, 'whis_width' : 1}, color = 'green')
 sns.violinplot(data=feat_effects['avg_popularity_with_feat'], ax = axes[1], fill = False, cut = 2, inner = 'box',
@@ -329,12 +337,14 @@ for i in range(0,3):
     axes[i].set_xlabel(str(axes[i].get_ylabel).split("ylabel='")[-1][0:-3])
     axes[i].set_ylabel('')
 plt.tight_layout()
-plt.savefig('charts/q8.png', bbox_inches='tight')
+plt.savefig('charts/q8.png', bbox_inches='tight', dpi = 150)
 
 print('8th chart done.')
 
 #Q9
 fig, ax = plt.subplots(figsize=(10,5))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 sns.regplot(data=feature_spillovers, 
             x = 'feat_songs_popularity', y = 'main_songs_popularity', fit_reg = True, 
             line_kws = {'color' : 'k'}, scatter_kws={'s': 5, 'color': 'green', 'alpha': 0.5})
@@ -342,9 +352,8 @@ ax.set_ylim(top=100, bottom = 0, auto = False)
 ax.set_xlim(left = 0, right = 100, auto = False)
 ax.set_title('Regression of main_songs_popularity vs feat_songs_popularity')
 
-# Show the plot
 plt.tight_layout()
-plt.savefig('charts/q9.png', bbox_inches='tight')
+plt.savefig('charts/q9.png', bbox_inches='tight', dpi = 150)
 
 print('9th chart done.')
 
@@ -355,6 +364,8 @@ def label_point(x, y, val, ax):
         ax.text(point['x']+1, point['y']+1, str(point['val']), fontsize = 6, wrap = True, snap = True)
 
 fig, axes = plt.subplots(nrows = 1, ncols = 2, figsize=(10,5))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 sns.scatterplot(data=genre_niche, 
             x = 'tracks_in_genre_main_popularity_avg', y = 'tracks_in_genre_main', s = 10, color = 'green', alpha = 1, ax = axes[0])
 axes[0].set_xlim(left = 0, right = 100, auto = False)
@@ -383,9 +394,8 @@ label_point(genre_niche[(genre_niche['tracks_in_genre_sub_popularity_avg'] > 45)
 
 fig.suptitle('Scatterplots of genre average popularaties vs tracks in the genre\n(for main and subgenres)')
 
-# Show the plot
 plt.tight_layout()
-plt.savefig('charts/q10.png', bbox_inches='tight')
+plt.savefig('charts/q10.png', bbox_inches='tight', dpi = 300)
 
 print('10th chart done.')
 
@@ -396,6 +406,8 @@ def label_point(x, y, val, ax):
         ax.text(point['x'] - .2, point['y'] - .2, str(point['val']), fontsize=5, wrap=True, snap=True, horizontalalignment = 'right', in_layout =True, rotation = 30)
 
 fig, ax = plt.subplots(figsize=(10,5))
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 sns.scatterplot(data=explicit_genres, 
             x = 'tracks_in_genre_main_explicit_pct', y = 'tracks_in_genre_sub_explicit_pct', s = 10, color = 'green', alpha = 1)
 ax.set_xlim(left = 0, right = 100, auto = False)
@@ -440,15 +452,15 @@ ax.plot([100, zoom_ax.get_position().x1 * 100], [90, zoom_ax.get_position().y0 *
 ax.hlines(y = 90, xmin = 90, xmax = 100, linestyle = '--', color = 'orange')
 ax.vlines(x = 90, ymin = 90, ymax = 100, linestyle = '--', color = 'orange')
 
-
-# Show the plot
 plt.tight_layout()
-plt.savefig('charts/q11.png', bbox_inches='tight')
+plt.savefig('charts/q11.png', bbox_inches='tight', dpi = 300)
 
 print('11th chart done.')
 
 #Q12
 fig, axes = plt.subplots(nrows = 1, ncols = 3, figsize=(10, 5))  # Set the figure size
+plt.rcParams['font.family'] = 'Calibri'
+plt.rcParams['font.weight'] = 'light'
 sns.violinplot(data=genre_aggregation['tracks_in_genre_main_popularity_avg'], ax = axes[0], fill = False, cut = 2, inner = 'box',
                linewidth = 1, inner_kws = {'box_width' : 20, 'whis_width' : 1}, color = 'green')
 sns.violinplot(data=genre_aggregation['albums_in_genre_main_popularity_avg'], ax = axes[1], fill = False, cut = 2, inner = 'box',
@@ -461,7 +473,7 @@ for i in range(0,3):
     axes[i].set_xlabel(str(axes[i].get_ylabel).split("ylabel='")[-1][0:-3])
     axes[i].set_ylabel('')
 plt.tight_layout()
-plt.savefig('charts/q12.png', bbox_inches='tight')
+plt.savefig('charts/q12.png', bbox_inches='tight', dpi = 150)
 
 print('12th chart done.')
 
