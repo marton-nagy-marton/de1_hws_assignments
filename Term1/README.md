@@ -36,7 +36,7 @@ You can create the normalized database in two ways: either download the raw file
 
 1. Download and unzip the [`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip) file.
 2. Open it in MySQL Workbench.
-3. Run the whole script.
+3. Run the whole script (this also might take a good 15 minutes).
 4. You should end up with the normalized `spotify` database.
 
 From this point on, you can follow this roadmap:
