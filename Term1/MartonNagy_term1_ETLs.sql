@@ -100,7 +100,7 @@ group by album_id
 -- logging into messages
 if pr_mode = 0 then -- initialization mode
 	insert into messages
-    select concat(now(), ': added ', (select count(*) from albums_dw), ' rows to abums_dw on initialization.');
+    select concat(now(), ': added ', (select count(*) from albums_dw), ' rows to albums_dw on initialization.');
 else -- update mode
 	insert into messages
     select concat(now(), ': re-initialized albums_dw on scheduled update, added ', (select count(*) from albums_dw), ' rows.');
