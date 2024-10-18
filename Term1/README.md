@@ -19,6 +19,48 @@ To maintain the up-to-dateness of data warehouses, a few triggers and a schedule
 
 All the above functionalites have been implemented in a single [SQL script](/Term1/MartonNagy_term1_ETLs.sql) (pre-supposing having loaded the database).
 
+### Quick reproduction guide
+
+You can create the normalized database in two ways: either download the raw files and paste them into your MySQL Uploads folder to import and normalize the raw CSVs, or you can import the normalized schema by running the dump file.
+
+#### Option 1: Importing from CSVs
+
+1. Download and unzip the raw [CSV files](/Term1/spotify_raw_data.zip) from this repository.
+2. Paste the unzipped CSVs into you MySQL Uploads folder.
+3. Download the [`MartonNagy_term1_from_scratch.sql`](/Term1/MartonNagy_term1_from_scratch.sql) SQL script and open it in MySQL Workbench.
+4. **Modify the `load data` statements so that the path points to your specific MySQL Uploads folder**.
+5. Run the whole script (might take up to 30 minutes depending on you set-up).
+6. You should end up with the normalized `spotify` database.
+
+#### Option 2: Importing from the dump file
+
+1. Download and unzip the [`normalized_data_dump.zip`](/Term1/normalized_data_dump.zip) file.
+2. Open it in MySQL Workbench.
+3. Run the whole script.
+4. You should end up with the normalized `spotify` database.
+
+From this point on, you can follow this roadmap:
+
+1. Download the [`MartonNagy_term1_ETLs.sql`](/Term1/MartonNagy_term1_ETLs.sql) SQL script.
+2. Open it in MySQL Workbench.
+3. Run the whole script.
+4. You should end up with the appropriate data warehouses, data marts, as well as some extre features: triggers, events, and some materialized views.
+5. Download the [`views_chart_generator.py`](views_chart_generator.py) Python script.
+6. Please verify that the following packages are installed in your environment: `pymysql`, `seaborn`, `matplotlib`, `mpl_toolkits`, `pandas`, `numpy`, `warnings`, `textwrap`, `os`, `getpass`.
+   * If you are using Anaconda, everything other than `pymysql` should be installed by default.
+   * If something is missing, please install it before running the script.
+7. Verify that your MySQL local server is running.
+   * If you have created the database in a remote server, please adjust the following part of code accordingly:
+```python
+spotify = pymysql.connect(
+host='localhost',
+user= username,    # your MySQL username
+password= password, # your MySQL password
+database='spotify'
+```
+9. Execute the script from a location that is convenient for you.
+10. You should end with charts and tables (12 in total) in a `charts` directory in the location from where you have executed the script. Each chart is named `qX.png`, where `X` stands for the number of question the chart is related to.
+
 ## Introduction
 
 Spotify holds a vast array of quantitative data on all the tracks, albums and artists uploaded there (e.g. valence of every song, that is their overall positiveness score). These variables can help as draw useful insights on the determinants of e.g. the popularity of a song or an album, the number of followers of an artist, or we can even determine trending genres.
