@@ -473,16 +473,12 @@ starts '2024-10-11 12:30:00'
 ends '2024-10-11 12:30:00' + interval 2 month
 do
 	begin
-		-- I want this to appear on the screen directly, that is why I am not inserting into messages.
-        -- So that the user is aware what is happening.
-		select 'Attention: Now re-initializing all DWs on scheduled update! Some tables may be locked during the update.';
         insert into messages select concat(now(), ': starting the scheduled UpdateAllDWEvent...');
         call UpdateAlbumsDW(1);
         call UpdateArtistDW(1);
         call UpdateTracksDW(1);
         call UpdateGenresDW(1);
         insert into messages select concat(now(), ': scheduled UpdateAllDWEvent happened successfully.');
-        select 'Scheduled update finished!';
 	end //
 delimiter ;
 
