@@ -807,11 +807,9 @@ starts '2024-10-11 00:00:00'
 ends '2024-10-11 00:00:00' + interval 2 month
 do
 	begin
-		select 'Updating materialized views, tables may be locked!';
-        insert into messages select concat(now(), ': scheduled update of materialized views started.');
+        insert into messages select concat(now(), ': scheduled update of materialized views started...');
 		call UpdateMVPopAlbums();
         call UpdateMVAlbumsPopularityDate();
         insert into messages select concat(now(), ': scheduled update of materialized views finished.');
-        select 'Successfully updated materialized views.';
 	end //
 delimiter ;

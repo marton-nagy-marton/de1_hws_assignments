@@ -19,7 +19,7 @@ use spotify;
 
 -- CREATE TABLES
 -- Table: tracks
-drop table tracks;
+drop table if exists tracks;
 create table tracks (
     id varchar(255) primary key,
     track_popularity int,
@@ -27,6 +27,7 @@ create table tracks (
 ) default character set = utf8mb4 collate = utf8mb4_unicode_ci;
 
 -- Table: artist
+drop table if exists artist;
 create table artist (
     id varchar(255) primary key,
     name varchar(255),
@@ -43,6 +44,7 @@ create table artist (
 ) default character set = utf8mb4 collate = utf8mb4_unicode_ci;
 
 -- Table: features
+drop table if exists features;
 create table features (
     id varchar(255) primary key,
     danceability decimal(20,10),
@@ -69,6 +71,7 @@ create table features (
 default character set = utf8mb4 collate = utf8mb4_unicode_ci;
 
 -- Table: albums
+drop table if exists albums;
 create table albums (
     track_name text,
     track_id varchar(255),
@@ -169,7 +172,6 @@ set
     is_explicit = if(@is_explicit regexp '^(true|false)$', if(@is_explicit = "true", 1, 0), null);
 
 -- Load data into albums table
-truncate albums;
 load data infile 'D:/EGYETEM/CEU/DE/Uploads/spotify-albums_data_2023.csv'
 into table albums
 fields terminated by ',' enclosed by '"'
@@ -205,6 +207,7 @@ set unique_checks = 1;
 -- NORMALIZE TABLE STRUCTURE
 
 -- create a table to collect all the different genres listed in artist table last 7 fields
+drop table if exists genres_temp;
 create table genres_temp(
 genre VARCHAR(255));
 
@@ -217,6 +220,7 @@ insert into genres_temp select distinct genre_5 from artist where genre_5 is not
 insert into genres_temp select distinct genre_6 from artist where genre_6 is not null;
 
 -- insert unique values into table with id
+drop table if exists genres;
 create table genres(
 id int auto_increment not null primary key,
 genre varchar(255));
@@ -227,6 +231,7 @@ insert into genres (genre) select distinct genre from genres_temp;
 drop table genres_temp;
 
 -- create junction table matching artists to genres
+drop table if exists artist_to_genre;
 create table artist_to_genre(
 artist_id varchar(22),
 genre_id int,
@@ -305,6 +310,7 @@ drop column genre_5,
 drop column genre_6;
 
 -- create a new table to collect all the fields that are related to tracks
+drop table if exists tracks_revised;
 create table tracks_revised(
     id varchar(255) primary key,
     track_popularity int,
@@ -373,6 +379,7 @@ drop column duration_ms,
 drop column duration_sec;  -- dropping this too, as it can be easily calculated from duration ms if needed
 
 -- create junction table to match artist to tracks
+drop table if exists artist_to_tracks;
 create table artist_to_tracks(
 artist_id varchar(255),
 track_id varchar(255),
@@ -484,6 +491,7 @@ on delete no action
 on update no action;
 
 -- create junction table to match tracks to albums
+drop table if exists tracks_to_albums;
 create table tracks_to_albums(
 track_id varchar(255),
 album_id varchar(255),
@@ -495,6 +503,7 @@ insert into tracks_to_albums
 select track_id, album_id, track_number from albums;
 
 -- create new albums table to hold album specific data
+drop table if exists albums_revised;
 create table albums_revised(
     album_type varchar(255),
     total_tracks int,
