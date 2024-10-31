@@ -545,7 +545,7 @@ The `albums_popularity_date` view analyzes the differences in album popularity b
 
 ![album popularity in two eras](/Term1/assets/q2.png)
 
-From the output table, we can see that more recent songs tend to be slightly more popular tend older ones (this is the same tendency we can see on Figure 3's last plot).
+From the output table, we can see that more recent songs tend to be slightly more popular then older ones (this is the same tendency we can see on Figure 3's last plot).
 
 ### Is there a relationship between an album's duration and the characteristics of its songs?
 
@@ -662,7 +662,7 @@ This view enables an analysis of trends in the emotional content of music over t
 
 #### Chart
 
-The below figure might give us an idea on how the average valence of songs evolved over time (the count of songs has also been plotted to show that data availibility is very much skewed towards more recent songs). One of the key message of this chart is that songs tend to less and less positive since the 2008 financial crises.
+The below figure might give us an idea on how the average valence of songs evolved over time (the count of songs has also been plotted to show that data availibility is very much skewed towards more recent songs). One of the key message of this chart is that songs tend to be less and less positive since the 2008 financial crises.
 
 ***Figure 7: Average valence and song count over time (monthly, with 12-month moving averages)***
 
@@ -874,7 +874,7 @@ The `genre_aggregation` view explores the relationship between the popularity of
   - Average artist popularity associated with the main genre.
 
 #### Purpose
-This view is designed to provide insights into how the popularity of genres varies when measured at the levels of songs, albums, and artists. By analyzing the relationships between these different levels of aggregation, the music industry can better understand how popularity is perceived and what factors might influence it.
+This view is designed to provide insights into how the popularity of genres varies when measured at the levels of songs, albums, and artists.
 
 #### Charts
 
