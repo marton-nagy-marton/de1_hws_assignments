@@ -294,6 +294,10 @@ This table stores aggregated album data, including album facts, artist dimension
 
 #### Table Structure
 
+| Primary Key       | Album Facts                                                                                                   | Artist Dimension                                                                                                    | Genre Dimension           | Track Dimension                                                                                                                 |
+|-------------------|---------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
+| album_id          | album_name, total_tracks, album_popularity, release_date, album_type, label, total_duration_s                | artist_id, artist_name, artist_popularity, followers, avg_feat_artist_popularity, avg_feat_artist_followers, count_feat_artist | artist_main_genre         | explicit_tracks_pct, avg_danceability, avg_energy, avg_loudness, avg_speechiness, avg_acousticness, avg_instrumentalness, avg_liveness, avg_valence |
+
 ##### Primary Key
 
 > [!Note]
@@ -333,7 +337,6 @@ This table stores aggregated album data, including album facts, artist dimension
 - `avg_liveness`: Average liveness score of tracks in the album.
 - `avg_valence`: Average valence score (musical positivity) of tracks in the album.
 
-
 ##### Subqueries
 - Subqueries are used to calculate aggregate values, such as:
   - Featured artist popularity and follower statistics.
@@ -346,9 +349,9 @@ This table stores aggregated track data, including track facts, album dimensions
 
 #### Table Structure
 
-| Primary Key       | Album Facts                                                                                                   | Artist Dimension                                                                                                    | Genre Dimension           | Track Dimension                                                                                                                 |
-|-------------------|---------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------|
-| album_id          | album_name, total_tracks, album_popularity, release_date, album_type, label, total_duration_s                | artist_id, artist_name, artist_popularity, followers, avg_feat_artist_popularity, avg_feat_artist_followers, count_feat_artist | artist_main_genre         | explicit_tracks_pct, avg_danceability, avg_energy, avg_loudness, avg_speechiness, avg_acousticness, avg_instrumentalness, avg_liveness, avg_valence |
+| Primary Key | Track Facts                                                                                                                                                                                                                               | Album Dimension                                                                            | Artist Dimension                                                                                                         | Genre Dimension      |
+|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|----------------------|
+| id          | track_name, track_popularity, is_explicit, danceability, energy, key_signature, loudness, mode, speechiness, acousticness, instrumentalness, liveness, valence, tempo, duration_s, time_signature                                        | album_name, total_tracks, release_date, album_popularity, album_duration_s, albumtracks_avg_popularity | main_artist_name, main_artist_popularity, main_artist_followers, feat_artist_avg_popularity, feat_artist_avg_followers, feat_artist_count | main_artist_genre    |
 
 ##### Primary Key
 
@@ -407,6 +410,10 @@ This table stores aggregated artist data, including artist facts, tracks dimensi
 
 #### Table Structure
 
+| Primary Key | Artist Facts                            | Tracks Dimension                                                                                                                        | Albums Dimension                               | Genres Dimension                 |
+|-------------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------|----------------------------------|
+| artist_id   | artist_name, artist_popularity, followers | main_songs_popularity, feat_songs_popularity, main_songs_count, feat_songs_count, avg_popularity_no_feat, avg_popularity_with_feat, avg_popularity_with_high_follower_feat | albums_count, avg_albums_popularity            | sub_genres_count, main_genre     |
+
 ##### Primary Key
 
 > [!Note]
@@ -448,6 +455,10 @@ This table stores aggregated artist data, including artist facts, tracks dimensi
 This table stores aggregated genre data, including album, artist, and track statistics in relation to their association with genres as either the main or subgenre. Below is a detailed list of the fields and their content.
 
 #### Table Structure
+
+| Primary Key | Genre Facts | Album Dimension                                                                                   | Artist Dimension                                                                                                                                              | Track Dimension                                                                                                                              |
+|-------------|-------------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| genre_id    | genre       | albums_in_genre_main, albums_in_genre_sub, albums_in_genre_main_popularity_avg, albums_in_genre_sub_popularity_avg                     | artist_in_genre_main, artist_in_genre_sub, artist_in_genre_main_popularity_avg, artist_in_genre_sub_popularity_avg, artist_in_genre_main_f
 
 ##### Primary Key
 
