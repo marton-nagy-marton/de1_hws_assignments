@@ -333,6 +333,47 @@ This table stores aggregated album data, including album facts, artist dimension
 - `avg_liveness`: Average liveness score of tracks in the album.
 - `avg_valence`: Average valence score (musical positivity) of tracks in the album.
 
+| Field                      | Type            |
+|----------------------------|-----------------|
+| **Primary Key**            |                 |
+| album_id                   | Primary Key     |
+
+| Field                      | Album Facts     |
+|----------------------------|-----------------|
+| album_name                 | Fact            |
+| total_tracks               | Fact            |
+| album_popularity           | Fact            |
+| release_date               | Fact            |
+| album_type                 | Fact            |
+| label                      | Fact            |
+| total_duration_s           | Fact            |
+
+| Field                      | Artist Dimension|
+|----------------------------|-----------------|
+| artist_id                  | Dimension       |
+| artist_name                | Dimension       |
+| artist_popularity          | Dimension       |
+| followers                  | Dimension       |
+| avg_feat_artist_popularity | Dimension       |
+| avg_feat_artist_followers  | Dimension       |
+| count_feat_artist          | Dimension       |
+
+| Field                      | Genre Dimension |
+|----------------------------|-----------------|
+| artist_main_genre          | Dimension       |
+
+| Field                      | Track Dimension |
+|----------------------------|-----------------|
+| explicit_tracks_pct        | Dimension       |
+| avg_danceability           | Dimension       |
+| avg_energy                 | Dimension       |
+| avg_loudness               | Dimension       |
+| avg_speechiness            | Dimension       |
+| avg_acousticness           | Dimension       |
+| avg_instrumentalness       | Dimension       |
+| avg_liveness               | Dimension       |
+| avg_valence                | Dimension       |
+
 ##### Subqueries
 - Subqueries are used to calculate aggregate values, such as:
   - Featured artist popularity and follower statistics.
