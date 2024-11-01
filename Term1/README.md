@@ -288,6 +288,9 @@ As I have noted in the introduction, we need four different data warehouses base
 
 All data warehouses are implemented as stored procedures. They are called once explicitly to initialize the warehouses. Then, a scheduled event (see later) re-builds all warehouses once a day to keep them up-to-date. The stored procedures also log some messages into the `messages` table (the message differs whether the stored procedure is called to initalize the warehouse with a 0 input parameter, or when it is called by an event, with a 1 input parameter).
 
+> [!Note]
+> Below you can find summary tables (indicating which fields belong to which dimension) for all the 4 data warehouses I made. As I ended up with many fields in my warehouses, I opted for a slightly different presentation compared to what we have seen in class. Also, below the summary tables, you can find some more detailed descriptions on the contents of each field.
+
 ### Data warehouse on albums (`albums_dw`)
 
 This table stores aggregated album data, including album facts, artist dimensions, genre dimensions, and track dimensions. Below is a detailed list of the fields and their content.
@@ -326,7 +329,7 @@ This table stores aggregated album data, including album facts, artist dimension
 ##### Genre Dimension
 - `artist_main_genre`: Main genre of the album's primary artist.
 
-##### Track Dimension (Aggregated Track-Level Data)
+##### Track Dimension
 - `explicit_tracks_pct`: Percentage of explicit tracks in the album.
 - `avg_danceability`: Average danceability score of tracks in the album.
 - `avg_energy`: Average energy score of tracks in the album.
@@ -336,12 +339,6 @@ This table stores aggregated album data, including album facts, artist dimension
 - `avg_instrumentalness`: Average instrumentalness score of tracks in the album.
 - `avg_liveness`: Average liveness score of tracks in the album.
 - `avg_valence`: Average valence score (musical positivity) of tracks in the album.
-
-##### Subqueries
-- Subqueries are used to calculate aggregate values, such as:
-  - Featured artist popularity and follower statistics.
-  - Total album duration (in seconds).
-  - Track-level averages for metrics like energy, danceability, and explicitness.
 
 ### Data warehouse on tracks (`tracks_dw`)
 
@@ -397,13 +394,6 @@ This table stores aggregated track data, including track facts, album dimensions
 ##### Genre Dimension
 - `main_artist_genre`: Main genre of the track’s primary artist.
 
-##### Subqueries
-- Subqueries are used to calculate aggregate values, such as:
-  - Total album duration (in seconds).
-  - Average track popularity within the album.
-  - Main and featuring artist popularity and follower statistics.
-  - Genre data linked to the main artist.
-
 ### Data warehouse on artists (`artist_dw`)
 
 This table stores aggregated artist data, including artist facts, tracks dimensions, albums dimensions, and genres dimensions. Below is a detailed list of the fields and their content.
@@ -442,13 +432,6 @@ This table stores aggregated artist data, including artist facts, tracks dimensi
 ##### Genres Dimension
 - `sub_genres_count`: Count of the artist's subgenres.
 - `main_genre`: Main genre of the artist.
-
-##### Subqueries
-- Subqueries are used to calculate aggregate values, such as:
-  - The artist's track and feature statistics, including counts and average popularity.
-  - The artist's album counts and average album popularity.
-  - Genre details like subgenre counts and the main genre.
-  - Track popularity in relation to featured artists, including tracks with highly followed featuring artists.
 
 ### Data warehouse on genres (`genres_dw`)
 
@@ -492,12 +475,6 @@ This table stores aggregated genre data, including album, artist, and track stat
 - `tracks_in_genre_main_explicit_pct`: Percentage of explicit tracks where the genre is the main genre.
 - `tracks_in_genre_sub_explicit_pct`: Percentage of explicit tracks where the genre is a subgenre.
 
-##### Subqueries
-- Subqueries are used to calculate aggregate values, such as:
-  - Counts and average popularity of albums, artists, and tracks in main and subgenres.
-  - Total follower counts for artists in each genre.
-  - Explicit content percentages for tracks within each genre.
-
 ## Data marts
 
 I have created views providing selected data to answer my 12 analytical questions. For most of the questions, I provide fact-level data in each view so that further statistical analysis (e.g. a simple regression) may be performed. Note, however, that for the 2nd question, I went with a different approach: I aggrageted the data for the 2 periods and the view presents some of the key statistical properties of the groups. This helps answering the question without any more sophisticated approach, but cuts the possibility of further analysis.
@@ -528,11 +505,11 @@ The results are ordered by `album_popularity` in descending order, so the most p
 #### Charts
 I have charted a few regression plots based on the view to uncover which factors influence most the albums' popularity (see in Figure 3).
 
-***Figure 3: Regressions of albums_popularity on certain quantitative variables***
+***Figure 3: Regressions of albums_popularity on certain quantitative variables for pop albums***
 
 ![albums_popularity_regressions](/Term1/assets/q1.png)
 
-Based on this, we can see that average song level variables do not really have an influence on album popularity. However, artists' popularity and follower counts show a strong correlation with the popularity of the albums. This means that more popular artists tend to have more popular albums.
+Based on this, we can see that average song level variables do not really have an influence on pop albums' popularity. However, artists' popularity and follower counts show a strong correlation with the popularity of the albums. This means that more popular pop artists tend to have more popular albums.
 
 ### How does albums' popularity differ between songs from 2010 to 2015 and 2016 to 2023?
 
@@ -599,7 +576,7 @@ Just like for question #1, I have plotted a few regression plots of albums' dura
 
 From the results, we can see some interesting tendencies. For example more danceable albums tend to be shorter, and the same stands for loudness and speechiness. However, the results from these regressions are very noisy, so no clear-cut conclusions can be drawn.
 
-### What are the determinant factors of Taylor Swift's songs - that is what kind of songs should she produce to maximize popularity?
+### What are the determinant factors of Taylor Swift's songs - that is, what kind of songs should she produce to maximize popularity?
 
 The `taylor_swift_songs` view analyzes the characteristics of Taylor Swift's tracks to identify which factors contribute to maximizing their popularity. By examining various song attributes, this view aims to provide insights into the kind of songs she should produce to enhance their appeal.
 
