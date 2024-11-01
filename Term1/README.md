@@ -289,7 +289,7 @@ As I have noted in the introduction, we need four different data warehouses base
 All data warehouses are implemented as stored procedures. They are called once explicitly to initialize the warehouses. Then, a scheduled event (see later) re-builds all warehouses once a day to keep them up-to-date. The stored procedures also log some messages into the `messages` table (the message differs whether the stored procedure is called to initalize the warehouse with a 0 input parameter, or when it is called by an event, with a 1 input parameter).
 
 > [!Note]
-> Below you can find summary tables (indicating which fields belong to which dimension) for all the 4 data warehouses I made. As I ended up with many fields in my warehouses, I opted for a slightly different presentation compared to what we have seen in class. Also, below the summary tables, you can find some more detailed descriptions on the contents of each field.
+> Below you can find summary tables (indicating which fields belong to which dimension) for all the 4 data warehouses I made. As I ended up with many fields in my warehouses, I opted for a slightly different presentation compared to what we have seen in class. Also, below the summary tables, you can find some more detailed descriptions on the contents of each field. Also, note that the dimensions I have defined are purposefully broad. I am aware that I could have narrowed down my dimensions into more detailed parts (like artist dimensions to main and featuring artists) but I have decided not to do so to keep my solution a bit more simple.
 
 ### Data warehouse on albums (`albums_dw`)
 
